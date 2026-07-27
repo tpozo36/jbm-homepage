@@ -1,0 +1,1529 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>JBM Sales & Marketing — Your brand. Every shelf. Since 1976.</title>
+<meta name="description" content="JBM is a national retail sales brokerage and warehousing partner. Since 1976 we've placed brands on shelves — and kept them moving." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,600;1,700&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   TOKENS
+   ============================================================ */
+:root{
+  --paper:#F0ECE4;
+  --paper-tint:#E8E3DB;
+  --ink:#141414;
+  --ink-soft:#1c1c1c;
+  --cobalt:#1E4FD8;
+  --cobalt-hover:#1a45c1;
+  --mid:#6B6560;
+  --border:#E0DAD2;
+  --border-dark:rgba(240,236,228,0.08);
+  --border-dark-strong:rgba(240,236,228,0.16);
+  --paper-muted:rgba(240,236,228,0.68);
+  --paper-faint:rgba(240,236,228,0.55);
+
+  --serif:'Playfair Display', 'Times New Roman', serif;
+  --sans:'DM Sans', 'Inter', system-ui, sans-serif;
+
+  --ease-out:cubic-bezier(.16,.84,.24,1);
+  --ease-in-out:cubic-bezier(.65,.05,.36,1);
+
+  --shell-max:1320px;
+  --gutter:clamp(20px, 4vw, 56px);
+  --section-y:clamp(96px, 12vw, 168px);
+  --radius-sm:6px;
+  --radius:12px;
+  --radius-lg:20px;
+}
+
+/* ============================================================
+   RESET
+   ============================================================ */
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0}
+html{scroll-behavior:smooth; -webkit-text-size-adjust:100%}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:17px;
+  line-height:1.75;
+  font-weight:400;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+img,svg{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+::selection{background:var(--cobalt);color:var(--paper)}
+h1,h2,h3{text-wrap:balance}
+p{text-wrap:pretty}
+
+/* Focus ring for keyboard nav — visible against both paper and ink */
+:focus-visible{
+  outline:2px solid var(--cobalt);
+  outline-offset:3px;
+  border-radius:2px;
+}
+.dark :focus-visible,
+.hero :focus-visible,
+.philosophy :focus-visible,
+.marquee-section :focus-visible,
+.footer :focus-visible{
+  outline-color:var(--paper);
+}
+
+/* ============================================================
+   UTILITY
+   ============================================================ */
+.shell{max-width:var(--shell-max); margin:0 auto; padding:0 var(--gutter)}
+.eyebrow{
+  font-family:var(--sans);
+  font-size:12px;
+  font-weight:500;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  color:var(--mid);
+  display:inline-flex;
+  align-items:center;
+  gap:12px;
+}
+.eyebrow::before{
+  content:"";
+  width:28px; height:1px;
+  background:var(--cobalt);
+  display:inline-block;
+}
+.dark .eyebrow{color:var(--paper-muted)}
+.section-head{max-width:780px}
+.section-head h2{
+  font-family:var(--serif);
+  font-weight:700;
+  font-size:clamp(38px, 5.4vw, 68px);
+  line-height:1.05;
+  letter-spacing:-.02em;
+  margin:0 0 22px;
+}
+.section-head p{
+  color:var(--mid);
+  font-size:clamp(16px, 1.2vw, 18px);
+  line-height:1.75;
+  max-width:60ch;
+  margin:0;
+}
+.dark .section-head p{color:var(--paper-muted)}
+
+/* Reveal defaults for GSAP */
+.reveal{opacity:0; transform:translateY(34px); will-change:opacity,transform}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn{
+  display:inline-flex; align-items:center; gap:10px;
+  padding:16px 26px;
+  border-radius:999px;
+  font-family:var(--sans);
+  font-size:14px; font-weight:500; letter-spacing:.02em;
+  transition:transform .25s var(--ease-out), background-color .25s var(--ease-out), color .25s var(--ease-out), border-color .25s var(--ease-out), box-shadow .25s var(--ease-out);
+  border:1px solid transparent;
+  cursor:pointer;
+  line-height:1;
+}
+.btn .arrow{transition:transform .3s var(--ease-out)}
+.btn:active{transform:scale(0.98); transition:transform 120ms var(--ease-out)}
+
+.btn-cobalt{background:var(--cobalt); color:var(--paper)}
+.btn-ink{background:var(--ink); color:var(--paper)}
+.btn-paper{background:var(--paper); color:var(--ink)}
+.btn-ghost{
+  color:var(--paper);
+  border:1px solid var(--border-dark-strong);
+  background:transparent;
+}
+
+@media (hover: hover) and (pointer: fine){
+  .btn:hover .arrow{transform:translateX(4px)}
+  .btn-cobalt:hover{background:var(--cobalt-hover); transform:translateY(-1px)}
+  .btn-ink:hover{background:#000; transform:translateY(-1px)}
+  .btn-paper:hover{background:#fff; transform:translateY(-1px)}
+  .btn-ghost:hover{border-color:var(--paper); background:rgba(240,236,228,.04)}
+}
+
+.link-ghost{
+  display:inline-flex; align-items:center; gap:10px;
+  font-size:14px; font-weight:500; letter-spacing:.02em;
+  color:var(--paper);
+  position:relative;
+  padding-bottom:2px;
+}
+.link-ghost::after{
+  content:""; position:absolute; left:0; bottom:0;
+  width:100%; height:1px;
+  background:var(--paper-faint);
+  transform:scaleX(1); transform-origin:right center;
+  transition:background-color .22s var(--ease-out);
+}
+.link-ghost .arrow{transition:transform .3s var(--ease-out)}
+@media (hover: hover) and (pointer: fine){
+  .link-ghost:hover::after{background:var(--cobalt)}
+  .link-ghost:hover .arrow{transform:translateX(4px)}
+}
+
+/* ============================================================
+   NAV
+   ============================================================ */
+.nav{
+  position:fixed; top:0; left:0; right:0;
+  z-index:80;
+  padding:18px 0;
+  transition:background-color .35s var(--ease-out), backdrop-filter .35s var(--ease-out), border-color .35s var(--ease-out);
+  border-bottom:1px solid transparent;
+}
+.nav-inner{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:24px;
+}
+.logo{
+  font-family:var(--serif); font-weight:700;
+  font-size:26px; letter-spacing:-.02em;
+  color:var(--paper);
+  transition:color .35s var(--ease-out);
+}
+.nav-links{
+  display:flex; align-items:center; gap:36px;
+}
+.nav-links a{
+  font-size:14px; font-weight:500; letter-spacing:.01em;
+  color:var(--paper-muted);
+  transition:color .25s var(--ease-out);
+  position:relative;
+}
+.nav-links a:not(.btn)::after{
+  content:""; position:absolute; left:0; bottom:-6px;
+  width:100%; height:1px; background:var(--cobalt);
+  transform:scaleX(0); transform-origin:left center;
+  transition:transform .2s var(--ease-out);
+}
+.nav-links .btn-cobalt{color:var(--paper); padding:12px 22px; font-size:13px}
+
+/* Scrolled state */
+.nav.is-scrolled{
+  background:rgba(240,236,228,.86);
+  backdrop-filter:saturate(160%) blur(14px);
+  -webkit-backdrop-filter:saturate(160%) blur(14px);
+  border-bottom:1px solid var(--border);
+}
+.nav.is-scrolled .logo{color:var(--ink)}
+.nav.is-scrolled .nav-links a{color:var(--ink)}
+.nav.is-scrolled .nav-links a:not(.btn){color:#2a2a2a}
+.nav.is-scrolled .nav-links .btn-cobalt{color:var(--paper)}
+
+@media (hover: hover) and (pointer: fine){
+  .nav-links a:not(.btn):hover{color:var(--paper)}
+  .nav-links a:not(.btn):hover::after{transform:scaleX(1)}
+  .nav.is-scrolled .nav-links a:not(.btn):hover{color:var(--cobalt)}
+}
+
+.nav-toggle{display:none}
+
+@media (max-width: 860px){
+  .nav-links{
+    position:fixed; inset:0 0 0 auto;
+    width:min(84vw, 380px);
+    background:var(--paper);
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:center;
+    gap:28px;
+    padding:80px 40px;
+    transform:translateX(100%);
+    transition:transform .45s var(--ease-out);
+    border-left:1px solid var(--border);
+  }
+  .nav-links.is-open{transform:translateX(0)}
+  .nav-links a{color:var(--ink); font-size:20px; font-family:var(--serif); font-weight:600; letter-spacing:-.01em}
+  .nav-links a:not(.btn)::after{display:none}
+  .nav-links .btn-cobalt{color:var(--paper); padding:14px 24px}
+  .nav-toggle{
+    display:inline-flex; flex-direction:column; gap:5px;
+    width:36px; height:36px; align-items:center; justify-content:center;
+    z-index:90;
+  }
+  .nav-toggle span{
+    display:block; width:22px; height:1.5px;
+    background:var(--paper);
+    transition:transform .3s var(--ease-out), background .3s var(--ease-out), opacity .3s var(--ease-out);
+  }
+  .nav.is-scrolled .nav-toggle span{background:var(--ink)}
+  .nav-toggle.is-open span{background:var(--ink)}
+  .nav-toggle.is-open span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+  .nav-toggle.is-open span:nth-child(2){opacity:0}
+  .nav-toggle.is-open span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.hero{
+  position:relative;
+  min-height:100vh;
+  background:var(--ink);
+  color:var(--paper);
+  overflow:hidden;
+  display:flex; align-items:center;
+  padding-top:100px; padding-bottom:100px;
+}
+.hero::before{
+  content:""; position:absolute; inset:0;
+  background:
+    radial-gradient(60% 55% at 78% 42%, rgba(30,79,216,.20), transparent 70%),
+    radial-gradient(50% 60% at 12% 60%, rgba(240,236,228,.03), transparent 65%);
+  pointer-events:none;
+}
+.hero-grid{
+  position:relative; z-index:2;
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:64px; align-items:center;
+  width:100%;
+}
+.hero-copy{max-width:640px}
+.hero-eyebrow{
+  font-size:12px; font-weight:500; letter-spacing:.24em; text-transform:uppercase;
+  color:var(--paper-muted);
+  display:inline-flex; align-items:center; gap:14px;
+  margin-bottom:32px;
+}
+.hero-eyebrow::before{
+  content:""; width:32px; height:1px; background:var(--cobalt);
+}
+.hero h1{
+  font-family:var(--serif);
+  font-weight:700;
+  font-size:clamp(52px, 7.4vw, 108px);
+  line-height:.98;
+  letter-spacing:-.028em;
+  margin:0 0 32px;
+}
+.hero h1 em{
+  font-style:italic;
+  font-weight:600;
+  color:var(--paper);
+}
+.hero h1 .light{
+  color:var(--paper-muted);
+  font-weight:500;
+}
+.hero-sub{
+  font-size:clamp(16px, 1.25vw, 19px);
+  line-height:1.75;
+  color:var(--paper-muted);
+  max-width:44ch;
+  margin:0 0 44px;
+}
+.hero-ctas{display:flex; align-items:center; gap:24px; flex-wrap:wrap}
+
+.hero-canvas-wrap{
+  position:relative;
+  height:min(78vh, 720px);
+  min-height:520px;
+}
+#hero-canvas{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  display:block;
+}
+
+/* Scroll indicator */
+.scroll-indicator{
+  position:absolute;
+  right:var(--gutter); bottom:36px;
+  z-index:3;
+  display:flex; align-items:center; gap:12px;
+  color:var(--paper-muted);
+  font-size:11px; letter-spacing:.22em; text-transform:uppercase;
+}
+.scroll-track{
+  position:relative;
+  width:1px; height:64px;
+  background:rgba(240,236,228,.16);
+  overflow:hidden;
+}
+.scroll-fill{
+  position:absolute; top:-40%; left:0;
+  width:1px; height:40%;
+  background:var(--cobalt);
+  animation:drip 2.4s linear infinite;
+}
+@keyframes drip{
+  0%{top:-40%}
+  100%{top:100%}
+}
+
+@media (max-width: 960px){
+  .hero{min-height:auto; padding-top:120px}
+  .hero-grid{grid-template-columns:1fr; gap:40px}
+  .hero-copy{order:2}
+  .hero-canvas-wrap{order:1; height:min(52vh, 460px); min-height:380px}
+  .scroll-indicator{display:none}
+}
+
+/* ============================================================
+   MARQUEE
+   ============================================================ */
+.marquee-section{
+  background:var(--ink);
+  color:var(--paper);
+  padding:var(--section-y) 0;
+  position:relative;
+  overflow:hidden;
+}
+.marquee-head{
+  text-align:center;
+  max-width:640px;
+  margin:0 auto clamp(56px, 7vw, 96px);
+}
+.marquee-head h2{
+  font-family:var(--serif); font-weight:700;
+  font-size:clamp(38px, 5.4vw, 68px);
+  line-height:1.05;
+  letter-spacing:-.02em;
+  margin:0 0 22px;
+}
+.marquee-head p{color:var(--paper-muted); font-size:17px; margin:0}
+
+.marquee-stack{display:flex; flex-direction:column; gap:20px}
+.marquee{
+  position:relative;
+  overflow:hidden;
+  -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 12%, #000 88%, transparent 100%);
+          mask-image:linear-gradient(90deg, transparent 0, #000 12%, #000 88%, transparent 100%);
+}
+.marquee-track{
+  display:flex; align-items:center;
+  gap:14px;
+  width:max-content;
+  will-change:transform;
+  animation-timing-function:linear;
+  animation-iteration-count:infinite;
+}
+.marquee[data-dir="left"] .marquee-track{animation-name:scrollLeft}
+.marquee[data-dir="right"] .marquee-track{animation-name:scrollRight}
+.marquee[data-speed="32"] .marquee-track{animation-duration:32s}
+.marquee[data-speed="44"] .marquee-track{animation-duration:44s}
+.marquee[data-speed="54"] .marquee-track{animation-duration:54s}
+
+@keyframes scrollLeft{
+  from{transform:translateX(0)}
+  to{transform:translateX(-50%)}
+}
+@keyframes scrollRight{
+  from{transform:translateX(-50%)}
+  to{transform:translateX(0)}
+}
+
+.brand-pill{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:16px 28px;
+  border:1px solid rgba(240,236,228,.08);
+  border-radius:999px;
+  font-family:var(--serif);
+  font-weight:500;
+  font-size:18px;
+  letter-spacing:.005em;
+  color:var(--paper-faint);
+  white-space:nowrap;
+  transition:color .3s var(--ease-out), border-color .3s var(--ease-out), background-color .3s var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine){
+  .brand-pill:hover{
+    color:var(--paper);
+    border-color:var(--cobalt);
+    background:rgba(30,79,216,.06);
+  }
+  .marquee:hover .marquee-track{animation-play-state:paused}
+}
+
+/* ============================================================
+   SERVICES
+   ============================================================ */
+.services{background:var(--paper); padding:var(--section-y) 0}
+.services-head{margin-bottom:clamp(56px, 7vw, 88px)}
+.services-grid{
+  display:grid; grid-template-columns:1fr 1fr; gap:24px;
+  grid-auto-rows:1fr;
+}
+.service-card{
+  position:relative;
+  display:flex; flex-direction:column;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:clamp(34px, 3.6vw, 52px);
+  transition:transform .35s var(--ease-out), box-shadow .35s var(--ease-out), border-color .35s var(--ease-out);
+  overflow:hidden;
+}
+.service-card::after{
+  content:""; position:absolute; left:0; bottom:0;
+  height:2px; width:100%;
+  background:var(--cobalt);
+  transform:scaleX(0); transform-origin:left center;
+  transition:transform .5s var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine){
+  .service-card:hover{
+    transform:translateY(-5px);
+    border-color:transparent;
+    box-shadow:0 32px 60px -32px rgba(20,20,20,.18), 0 8px 20px -14px rgba(20,20,20,.10);
+  }
+  .service-card:hover::after{transform:scaleX(1)}
+}
+.service-card h3{
+  font-family:var(--serif);
+  font-weight:700;
+  font-size:clamp(24px, 2.2vw, 30px);
+  line-height:1.15;
+  letter-spacing:-.015em;
+  margin:0 0 18px;
+}
+.service-card p{
+  color:var(--mid);
+  font-size:15.5px; line-height:1.75;
+  margin:0 0 32px;
+  max-width:46ch;
+}
+.tag-row{
+  margin-top:auto;
+  display:flex; flex-wrap:wrap; gap:8px;
+  padding-top:26px;
+  border-top:1px solid var(--border);
+}
+.tag{
+  display:inline-flex; align-items:center;
+  padding:7px 13px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  font-size:12px; font-weight:500; letter-spacing:.015em;
+  color:#2a2a2a;
+  background:var(--paper);
+  transition:background-color .25s var(--ease-out), color .25s var(--ease-out), border-color .25s var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine){
+  .service-card:hover .tag{
+    background:var(--paper-tint);
+    border-color:#cec7bd;
+  }
+}
+@media (max-width: 860px){
+  .services-grid{grid-template-columns:1fr}
+}
+
+/* ============================================================
+   CATEGORIES
+   ============================================================ */
+.categories{background:var(--paper-tint); padding:var(--section-y) 0}
+.categories-head{margin-bottom:clamp(56px, 7vw, 88px)}
+.cat-grid{
+  display:grid; grid-template-columns:repeat(3, 1fr); gap:20px;
+}
+.cat-card{
+  position:relative;
+  background:var(--paper);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  height:320px;
+  overflow:hidden;
+  isolation:isolate;
+  transition:border-color .35s var(--ease-out);
+}
+.cat-top{
+  position:relative;
+  z-index:3;
+  padding:28px 28px 0;
+  display:flex; flex-direction:column;
+  gap:14px;
+}
+.cat-icon{
+  width:24px; height:24px;
+  color:var(--ink);
+  transition:color .35s var(--ease-out);
+}
+.cat-icon svg{width:100%; height:100%; display:block}
+.cat-card h3{
+  font-family:var(--serif); font-weight:700;
+  font-size:22px; line-height:1.2;
+  letter-spacing:-.015em;
+  margin:0;
+  transition:color .35s var(--ease-out);
+}
+.cat-card p{
+  color:var(--mid);
+  font-size:14.5px; line-height:1.6;
+  margin:0;
+  max-width:30ch;
+  transition:opacity .3s var(--ease-out);
+}
+.cat-image-wrap{
+  position:absolute;
+  left:0; right:0; bottom:0;
+  height:70%;
+  transform:translateY(100%);
+  transition:transform .45s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index:1;
+  overflow:hidden;
+}
+.cat-image{
+  width:100%; height:100%;
+  object-fit:cover;
+  display:block;
+}
+.cat-image-wrap::before{
+  content:"";
+  position:absolute;
+  top:0; left:0; right:0;
+  height:56px;
+  background:linear-gradient(to bottom, var(--paper) 0%, rgba(240,236,228,0) 100%);
+  z-index:2;
+  pointer-events:none;
+}
+@media (hover: hover) and (pointer: fine){
+  .cat-card:hover{border-color:var(--cobalt)}
+  .cat-card:hover .cat-image-wrap{transform:translateY(0)}
+  .cat-card:hover h3{color:var(--cobalt)}
+  .cat-card:hover .cat-icon{color:var(--cobalt)}
+  .cat-card:hover p{opacity:0}
+}
+
+@media (max-width: 960px){
+  .cat-grid{grid-template-columns:repeat(2, 1fr)}
+}
+@media (max-width: 560px){
+  .cat-grid{grid-template-columns:1fr}
+  .cat-card{height:300px}
+}
+
+/* ============================================================
+   PHILOSOPHY
+   ============================================================ */
+.philosophy{background:var(--ink); color:var(--paper); padding:var(--section-y) 0}
+.philosophy-head{margin-bottom:clamp(72px, 8vw, 112px)}
+.philosophy-head h2{color:var(--paper)}
+.philosophy-list{display:flex; flex-direction:column}
+.philo-item{
+  display:grid;
+  grid-template-columns:clamp(140px, 14vw, 200px) 1fr;
+  gap:clamp(32px, 5vw, 80px);
+  padding:clamp(40px, 5vw, 68px) 0;
+  border-top:1px solid var(--border-dark-strong);
+  align-items:start;
+}
+.philo-item:last-child{border-bottom:1px solid var(--border-dark-strong)}
+.philo-key{
+  font-family:var(--serif);
+  font-style:italic;
+  font-weight:600;
+  font-size:clamp(22px, 2.4vw, 30px);
+  line-height:1.15;
+  color:var(--cobalt);
+  letter-spacing:-.005em;
+  padding-top:14px;
+}
+.philo-body h3{
+  font-family:var(--serif);
+  font-weight:700;
+  font-size:clamp(28px, 3.4vw, 44px);
+  line-height:1.15;
+  letter-spacing:-.02em;
+  margin:0 0 22px;
+  color:var(--paper);
+}
+.philo-body p{
+  color:var(--paper-muted);
+  font-size:17px;
+  line-height:1.8;
+  max-width:58ch;
+  margin:0;
+}
+
+@media (max-width: 760px){
+  .philo-item{grid-template-columns:1fr; gap:14px}
+  .philo-key{padding-top:0; font-size:20px}
+}
+
+/* ============================================================
+   HERITAGE
+   ============================================================ */
+.heritage{background:var(--paper); padding:var(--section-y) 0}
+.heritage-grid{
+  display:grid;
+  grid-template-columns:1.05fr 1fr;
+  gap:clamp(48px, 6vw, 100px);
+  align-items:center;
+}
+.heritage-left{position:relative}
+.big-year{
+  font-family:var(--serif);
+  font-weight:800;
+  font-size:clamp(140px, 20vw, 280px);
+  line-height:.9;
+  letter-spacing:-.04em;
+  color:transparent;
+  -webkit-text-stroke:1px rgba(107,101,96,.18);
+  margin:0 0 clamp(40px, 5vw, 68px);
+  user-select:none;
+  font-variant-numeric:lining-nums;
+}
+.pillar-grid{
+  display:grid; grid-template-columns:1fr 1fr; gap:22px;
+}
+.pillar{
+  border-top:1px solid var(--border);
+  padding:22px 0 4px;
+  position:relative;
+}
+.pillar::before{
+  content:"";
+  position:absolute;
+  top:-1px; left:0;
+  width:36px; height:1px;
+  background:var(--cobalt);
+}
+.pillar h4{
+  font-family:var(--serif);
+  font-weight:700;
+  font-size:19px;
+  line-height:1.25;
+  letter-spacing:-.01em;
+  margin:0 0 8px;
+}
+.pillar p{
+  color:var(--mid);
+  font-size:14px;
+  line-height:1.65;
+  margin:0;
+}
+.heritage-right h2{
+  font-family:var(--serif);
+  font-weight:700;
+  font-size:clamp(34px, 4.6vw, 56px);
+  line-height:1.08;
+  letter-spacing:-.022em;
+  margin:0 0 28px;
+}
+.heritage-right p{
+  color:var(--mid);
+  font-size:17px;
+  line-height:1.85;
+  margin:0 0 20px;
+  max-width:52ch;
+}
+.heritage-right .btn{margin-top:24px}
+
+@media (max-width: 900px){
+  .heritage-grid{grid-template-columns:1fr; gap:56px}
+}
+@media (max-width: 480px){
+  .pillar-grid{grid-template-columns:1fr}
+}
+
+/* ============================================================
+   CTA STRIP
+   ============================================================ */
+.cta-strip{
+  background:var(--cobalt);
+  color:var(--paper);
+  padding:clamp(96px, 12vw, 160px) 0;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+.cta-strip::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:radial-gradient(80% 100% at 50% 0%, rgba(255,255,255,.08), transparent 60%);
+  pointer-events:none;
+}
+.cta-strip .inner{position:relative; z-index:2; max-width:820px; margin:0 auto}
+.cta-strip h2{
+  font-family:var(--serif);
+  font-weight:700;
+  font-size:clamp(42px, 6.6vw, 88px);
+  line-height:1.02;
+  letter-spacing:-.025em;
+  margin:0 0 24px;
+  color:var(--paper);
+}
+.cta-strip h2 em{font-style:italic; font-weight:600}
+.cta-strip p{
+  font-size:18px;
+  color:rgba(240,236,228,.85);
+  max-width:44ch;
+  margin:0 auto 42px;
+  line-height:1.7;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.footer{
+  background:var(--ink);
+  color:var(--paper);
+  padding:88px 0 36px;
+  border-top:1px solid var(--border-dark);
+}
+.footer-grid{
+  display:grid;
+  grid-template-columns:1.4fr 1fr 1fr;
+  gap:56px;
+  padding-bottom:64px;
+  border-bottom:1px solid var(--border-dark);
+}
+.footer-brand .logo{font-size:32px; color:var(--paper)}
+.footer-tag{
+  color:var(--paper-muted);
+  font-size:15px;
+  line-height:1.7;
+  margin:20px 0 0;
+  max-width:36ch;
+}
+.footer-col h5{
+  font-family:var(--sans);
+  font-size:12px;
+  font-weight:500;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  color:var(--paper-faint);
+  margin:0 0 22px;
+}
+.footer-col ul{
+  list-style:none; padding:0; margin:0;
+  display:flex; flex-direction:column; gap:14px;
+}
+.footer-col a{
+  color:var(--paper-muted);
+  font-size:15px;
+  transition:color .25s var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine){
+  .footer-col a:hover{color:var(--paper)}
+}
+.footer-bottom{
+  display:flex; justify-content:space-between; align-items:center;
+  padding-top:28px;
+  color:var(--paper-faint);
+  font-size:13px;
+  letter-spacing:.02em;
+}
+.footer-bottom a{color:var(--paper-faint); transition:color .25s var(--ease-out)}
+@media (hover: hover) and (pointer: fine){
+  .footer-bottom a:hover{color:var(--paper)}
+}
+
+@media (max-width: 760px){
+  .footer-grid{grid-template-columns:1fr; gap:48px; padding-bottom:48px}
+  .footer-bottom{flex-direction:column; gap:12px; align-items:flex-start}
+}
+
+/* ============================================================
+   MOTION SAFETY
+   ============================================================ */
+@media (prefers-reduced-motion: reduce){
+  /* Reduced motion: keep opacity/color transitions that aid comprehension,
+     drop movement (transforms, position) and looping decorative motion. */
+  *,*::before,*::after{
+    transition-property:opacity, color, background-color, border-color, box-shadow !important;
+    transition-duration:.2s !important;
+    animation:none !important;
+    scroll-behavior:auto !important;
+  }
+  .reveal{opacity:1; transform:none}
+  /* Kill decorative loops entirely */
+  .scroll-fill{display:none}
+  /* Neutralize hover/press transforms */
+  .btn:hover,.btn:active,
+  .service-card:hover{
+    transform:none !important;
+  }
+  /* Keep image hidden under reduced motion (no reveal transition) */
+  .cat-image-wrap{transform:translateY(100%) !important}
+}
+</style>
+</head>
+<body>
+
+<!-- =========================================================
+     NAV
+     ========================================================= -->
+<header class="nav" id="nav">
+  <div class="shell nav-inner">
+    <a href="#top" class="logo" aria-label="JBM">JBM.</a>
+    <nav class="nav-links" id="navLinks" aria-label="Primary">
+      <a href="#services">Services</a>
+      <a href="#brands">Brands</a>
+      <a href="#categories">Categories</a>
+      <a href="#about">About</a>
+      <a href="#contact" class="btn btn-cobalt">Let's Talk</a>
+    </nav>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- =========================================================
+     HERO
+     ========================================================= -->
+<section class="hero" id="top">
+  <div class="shell hero-grid">
+    <div class="hero-copy">
+      <div class="hero-eyebrow reveal" data-hero="eyebrow">Sales &amp; Marketing · Since 1976</div>
+      <h1 class="reveal" data-hero="headline">
+        <span class="light">Your brand.</span><br />
+        Every <em>shelf</em>.
+      </h1>
+      <p class="hero-sub reveal" data-hero="sub">
+        We've been putting brands on shelves since 1976. We know the buyers, the buyers know us.
+      </p>
+      <div class="hero-ctas reveal" data-hero="ctas">
+        <a href="#contact" class="btn btn-cobalt">Work With Us <span class="arrow">→</span></a>
+        <a href="#services" class="link-ghost">What We Do <span class="arrow">→</span></a>
+      </div>
+    </div>
+    <div class="hero-canvas-wrap">
+      <canvas id="hero-canvas" aria-hidden="true"></canvas>
+    </div>
+  </div>
+  <div class="scroll-indicator" aria-hidden="true">
+    <span>Scroll</span>
+    <div class="scroll-track"><div class="scroll-fill"></div></div>
+  </div>
+</section>
+
+<!-- =========================================================
+     BRAND MARQUEE
+     ========================================================= -->
+<section class="marquee-section dark" id="brands">
+  <div class="shell">
+    <div class="marquee-head">
+      <h2 class="reveal">Brands that trust <em>JBM</em>.</h2>
+      <p class="reveal">Names you know on shelves across the country. Placed and moved by the same team.</p>
+    </div>
+  </div>
+
+  <div class="marquee-stack">
+    <div class="marquee" data-dir="left" data-speed="32">
+      <div class="marquee-track" data-brands="row1"></div>
+    </div>
+    <div class="marquee" data-dir="right" data-speed="44">
+      <div class="marquee-track" data-brands="row2"></div>
+    </div>
+    <div class="marquee" data-dir="left" data-speed="54">
+      <div class="marquee-track" data-brands="row3"></div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     SERVICES
+     ========================================================= -->
+<section class="services" id="services">
+  <div class="shell">
+    <div class="services-head section-head">
+      <h2 class="reveal">Every angle of retail, <em>covered</em>.</h2>
+      <p class="reveal">From the buyer meeting to the shelf, we handle the full execution.</p>
+    </div>
+
+    <div class="services-grid">
+      <article class="service-card reveal">
+        <h3>Headquarter Responsibilities</h3>
+        <p>We own the buyer relationship — attending category reviews, managing new item presentations, and handling promotional submissions so your brand stays front and center.</p>
+        <div class="tag-row">
+          <span class="tag">Category Reviews</span>
+          <span class="tag">New Item Presentations</span>
+          <span class="tag">Promotional Submissions</span>
+          <span class="tag">Scheduled Account Meetings</span>
+        </div>
+      </article>
+
+      <article class="service-card reveal">
+        <h3>Administrative Support</h3>
+        <p>The paperwork is invisible when we do it right. We handle price changes, purchase orders, new item paperwork, and the sales tools that move deals forward.</p>
+        <div class="tag-row">
+          <span class="tag">Price Change Submissions</span>
+          <span class="tag">PO Processing</span>
+          <span class="tag">New Item Paperwork</span>
+          <span class="tag">Sales Tools</span>
+        </div>
+      </article>
+
+      <article class="service-card reveal">
+        <h3>Sales &amp; Merchandising</h3>
+        <p>Getting on shelf is step one. We execute at store level — POS placement, retail audits, and regional shows that keep your brand visible where buyers and consumers see it.</p>
+        <div class="tag-row">
+          <span class="tag">New Item Placement</span>
+          <span class="tag">POS Execution</span>
+          <span class="tag">Retail Audits</span>
+          <span class="tag">Regional Shows</span>
+        </div>
+      </article>
+
+      <article class="service-card reveal">
+        <h3>Marketing Support</h3>
+        <p>We coordinate the programs that drive velocity — promotional calendars, advertising coordination, catalog proofing, and seasonal programs built around your brand.</p>
+        <div class="tag-row">
+          <span class="tag">Promotional Calendars</span>
+          <span class="tag">Ad Coordination</span>
+          <span class="tag">Catalog &amp; Newsletter</span>
+          <span class="tag">Special Programs</span>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     CATEGORIES
+     ========================================================= -->
+<section class="categories" id="categories">
+  <div class="shell">
+    <div class="categories-head section-head">
+      <h2 class="reveal">Nine categories. <em>Deep expertise.</em></h2>
+      <p class="reveal">We know the buyers, the shelf sets, and the dynamics of every category we operate in.</p>
+    </div>
+
+    <div class="cat-grid" id="catGrid">
+      <!-- populated by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     PHILOSOPHY
+     ========================================================= -->
+<section class="philosophy dark">
+  <div class="shell">
+    <div class="philosophy-head section-head">
+      <h2 class="reveal">Retail rewards conviction. <em>We bring it in full.</em></h2>
+    </div>
+
+    <div class="philosophy-list">
+      <div class="philo-item reveal">
+        <div class="philo-key">Access.</div>
+        <div class="philo-body">
+          <h3>Placement is earned, not given.</h3>
+          <p>We've built retailer relationships over decades that most brands spend years chasing. That access is yours the day you work with JBM.</p>
+        </div>
+      </div>
+      <div class="philo-item reveal">
+        <div class="philo-key">Execution.</div>
+        <div class="philo-body">
+          <h3>The best brands win on execution, not just product.</h3>
+          <p>A great product on the wrong shelf, in the wrong region, at the wrong time is a missed opportunity. We close that gap.</p>
+        </div>
+      </div>
+      <div class="philo-item reveal">
+        <div class="philo-key">Both sides.</div>
+        <div class="philo-body">
+          <h3>Sales and logistics aren't separate problems.</h3>
+          <p>A supply chain failure can kill a buyer relationship it took years to build. By owning both sides, we protect your velocity and your reputation.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     HERITAGE
+     ========================================================= -->
+<section class="heritage" id="about">
+  <div class="shell heritage-grid">
+    <div class="heritage-left">
+      <div class="big-year" id="bigYear" aria-label="Since 1976">1900</div>
+      <div class="pillar-grid">
+        <div class="pillar reveal">
+          <h4>National Reach</h4>
+          <p>Relationships across every major channel.</p>
+        </div>
+        <div class="pillar reveal">
+          <h4>Proven Longevity</h4>
+          <p>Decades of launches and shelf permanence.</p>
+        </div>
+        <div class="pillar reveal">
+          <h4>Dual Capability</h4>
+          <p>Sales and logistics under one roof.</p>
+        </div>
+        <div class="pillar reveal">
+          <h4>Trusted Partner</h4>
+          <p>Brands that work with JBM come back.</p>
+        </div>
+      </div>
+    </div>
+    <div class="heritage-right">
+      <h2 class="reveal">Nearly 50 years on the front lines of <em>retail</em>.</h2>
+      <p class="reveal">JBM was founded in 1976 with a simple belief: brands deserve a partner who understands both how to sell and how to deliver. That belief hasn't changed in nearly 50 years.</p>
+      <p class="reveal">Today we operate across nine product categories with the retailer relationships and operational infrastructure to compete at every level of the market.</p>
+      <a href="#contact" class="btn btn-ink reveal">Start the Conversation <span class="arrow">→</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- =========================================================
+     CTA STRIP
+     ========================================================= -->
+<section class="cta-strip" id="contact">
+  <div class="shell inner">
+    <h2 class="reveal">Ready to own more <em>shelf</em>?</h2>
+    <p class="reveal">Tell us about your brand. We'll take it from there.</p>
+    <a href="mailto:hello@jbmsales.com" class="btn btn-paper reveal">Get In Touch <span class="arrow">→</span></a>
+  </div>
+</section>
+
+<!-- =========================================================
+     FOOTER
+     ========================================================= -->
+<footer class="footer">
+  <div class="shell">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="logo">JBM.</div>
+        <p class="footer-tag">A national sales &amp; marketing brokerage with warehousing and logistics under one roof. Placing brands on shelves since 1976.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Company</h5>
+        <ul>
+          <li><a href="#services">Services</a></li>
+          <li><a href="#categories">Categories</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="#brands">Brands</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Contact</h5>
+        <ul>
+          <li><a href="mailto:hello@jbmsales.com">hello@jbmsales.com</a></li>
+          <li><a href="#contact">Let's Talk</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Press</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 1976 – <span id="year">2026</span> JBM Sales &amp; Marketing. All rights reserved.</span>
+      <a href="https://jbmsales.com">jbmsales.com</a>
+    </div>
+  </div>
+</footer>
+
+<!-- =========================================================
+     LIBS
+     ========================================================= -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+<script>
+/* ============================================================
+   BOOT
+   ============================================================ */
+gsap.registerPlugin(ScrollTrigger);
+document.getElementById('year').textContent = new Date().getFullYear();
+
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ============================================================
+   NAV STATE + MOBILE TOGGLE
+   ============================================================ */
+const nav = document.getElementById('nav');
+const navLinks = document.getElementById('navLinks');
+const navToggle = document.getElementById('navToggle');
+
+const updateNav = () => {
+  if(window.scrollY > 32) nav.classList.add('is-scrolled');
+  else nav.classList.remove('is-scrolled');
+};
+updateNav();
+window.addEventListener('scroll', updateNav, { passive:true });
+
+navToggle.addEventListener('click', () => {
+  const open = navLinks.classList.toggle('is-open');
+  navToggle.classList.toggle('is-open', open);
+  navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+});
+navLinks.querySelectorAll('a').forEach(a => {
+  a.addEventListener('click', () => {
+    navLinks.classList.remove('is-open');
+    navToggle.classList.remove('is-open');
+    navToggle.setAttribute('aria-expanded','false');
+  });
+});
+
+/* ============================================================
+   BRAND MARQUEES
+   ============================================================ */
+const BRAND_ROWS = {
+  row1:["TJ Maxx","Marshalls","HomeGoods","HomeSense","Sierra Trading Post","Ross","Burlington","Macy's Backstage","Five Below","Von Maur","Boscov's"],
+  row2:["Ocean State Job Lot","Menards","Ollie's","Gabe's","Grocery Outlet","Total Wine & More","Bealls Outlet","Bealls","Staples","World Market","The Paper Store"],
+  row3:["QVC","HSN","Marc's","Hamrick's","Renys","Shoppers World","Lot-Less","HomeBuys","TJX Canada","BFL Group"]
+};
+
+const buildPill = (name) => {
+  const el = document.createElement('span');
+  el.className = 'brand-pill';
+  el.textContent = name;
+  return el;
+};
+
+Object.entries(BRAND_ROWS).forEach(([rowKey, brands]) => {
+  const track = document.querySelector(`[data-brands="${rowKey}"]`);
+  if(!track) return;
+  const seq = brands.concat(brands); // duplicate for seamless loop
+  seq.forEach(b => track.appendChild(buildPill(b)));
+});
+
+/* ============================================================
+   CATEGORY GRID
+   ============================================================ */
+const ICON_ATTRS = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"';
+const CAT_IMG = 'https://images.unsplash.com/';
+const IMG_PARAMS = '?w=600&q=80&auto=format&fit=crop';
+const CATEGORIES = [
+  { icon:`<svg ${ICON_ATTRS}><path d="M4.5 19.5C4.5 11 11 5 20 4.5c-.5 9-6.5 15-15 15-.5 0-.5-.5-.5-.5z"/><path d="M4.5 19.5 14 10"/></svg>`,
+    title:'Organic & Natural', body:'Deep roots in the natural channel.',
+    image:'photo-1542838132-92c53300491e' },
+  { icon:`<svg ${ICON_ATTRS}><path d="M3 15h18"/><path d="M4 15a8 8 0 0 1 16 0"/><path d="M12 7v-2"/></svg>`,
+    title:'Specialty Foods', body:'Artisan brands placed where discerning consumers shop.',
+    image:'photo-1504674900247-0877df9cc836' },
+  { icon:`<svg ${ICON_ATTRS}><circle cx="12" cy="12" r="4"/><path d="M8 12 4 9v6z"/><path d="M16 12l4-3v6z"/></svg>`,
+    title:'Confections', body:'Placement and shelf presence to drive impulse.',
+    image:'photo-1582058091505-f87a2e55a40f' },
+  { icon:`<svg ${ICON_ATTRS}><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/></svg>`,
+    title:'Housewares', body:'Hard goods navigating complex retail environments.',
+    image:'photo-1556909114-f6e7ad7d3136' },
+  { icon:`<svg ${ICON_ATTRS}><circle cx="6" cy="10" r="1.6"/><circle cx="10" cy="6.5" r="1.6"/><circle cx="14" cy="6.5" r="1.6"/><circle cx="18" cy="10" r="1.6"/><path d="M8.5 15.5c0-2 1.5-3.5 3.5-3.5s3.5 1.5 3.5 3.5v1c0 1.5-1.4 2.5-3 2.5h-1c-1.6 0-3-1-3-2.5z"/></svg>`,
+    title:'Pet', body:'One of the fastest-growing categories. We know it cold.',
+    image:'photo-1587300003388-59208cc962cb' },
+  { icon:`<svg ${ICON_ATTRS}><rect x="7" y="7" width="10" height="10" rx="1"/><rect x="10" y="10" width="4" height="4"/><path d="M10 4v3M14 4v3M10 17v3M14 17v3M4 10h3M4 14h3M17 10h3M17 14h3"/></svg>`,
+    title:'Tech & Electronics', body:'Consumer tech in competitive retail real estate.',
+    image:'photo-1519389950473-47ba0277781c' },
+  { icon:`<svg ${ICON_ATTRS}><path d="M12 7a2 2 0 1 1 2-2"/><path d="M12 7v2"/><path d="M12 9 3 16v2h18v-2z"/></svg>`,
+    title:'Apparel', body:'Fashion brands with retail strategy to match.',
+    image:'photo-1489987707025-afc232f7ea0f' },
+  { icon:`<svg ${ICON_ATTRS}><g transform="rotate(-45 12 12)"><rect x="3" y="9" width="18" height="6" rx="3"/><line x1="12" y1="9" x2="12" y2="15"/></g></svg>`,
+    title:'Health & Wellness', body:'Supplements and wellness in the right channels.',
+    image:'photo-1512621776951-a57141f2eefd' },
+  { icon:`<svg ${ICON_ATTRS}><path d="M4 9l1.5-4h13L20 9"/><path d="M4 9v11h16V9"/><path d="M4 9c0 1.4 1.2 2.4 2.7 2.4S9.3 10.4 9.3 9c0 1.4 1.2 2.4 2.7 2.4s2.7-1 2.7-2.4c0 1.4 1.2 2.4 2.7 2.4S20 10.4 20 9"/><path d="M9 20v-5h6v5"/></svg>`,
+    title:'National Accounts', body:'Scale relationships across the country\'s largest retailers.',
+    image:'photo-1516274626895-055a99214f08' }
+];
+const catGrid = document.getElementById('catGrid');
+CATEGORIES.forEach(c => {
+  const card = document.createElement('article');
+  card.className = 'cat-card reveal';
+  card.innerHTML = `
+    <div class="cat-top">
+      <div class="cat-icon" aria-hidden="true">${c.icon}</div>
+      <h3>${c.title}</h3>
+      <p>${c.body}</p>
+    </div>
+    <div class="cat-image-wrap" aria-hidden="true">
+      <img class="cat-image" src="${CAT_IMG}${c.image}${IMG_PARAMS}" alt="" loading="lazy" decoding="async">
+    </div>`;
+  catGrid.appendChild(card);
+});
+
+/* ============================================================
+   SCROLL REVEALS
+   ============================================================ */
+const staggerGroups = document.querySelectorAll('.services-grid, .cat-grid, .philosophy-list, .pillar-grid');
+const groupedReveals = new Set();
+staggerGroups.forEach(group => {
+  group.querySelectorAll('.reveal').forEach(el => groupedReveals.add(el));
+});
+
+/* Solo reveals: everything not inside a stagger group */
+document.querySelectorAll('.reveal:not([data-hero])').forEach(el => {
+  if(groupedReveals.has(el)) return;
+  gsap.to(el, {
+    opacity:1, y:0,
+    duration:0.85,
+    ease:'power3.out',
+    scrollTrigger:{
+      trigger:el,
+      start:'top 88%',
+      once:true
+    }
+  });
+});
+
+/* Stagger groups by their nearest section */
+staggerGroups.forEach(group => {
+  const kids = group.querySelectorAll('.reveal');
+  gsap.to(kids, {
+    opacity:1, y:0,
+    duration:0.9,
+    ease:'power3.out',
+    stagger:0.08,
+    scrollTrigger:{
+      trigger:group,
+      start:'top 82%',
+      once:true
+    }
+  });
+});
+
+/* ============================================================
+   HERITAGE YEAR COUNT-UP
+   ============================================================ */
+const bigYear = document.getElementById('bigYear');
+const yearObj = { v:1900 };
+ScrollTrigger.create({
+  trigger:bigYear,
+  start:'top 78%',
+  once:true,
+  onEnter:() => {
+    gsap.to(yearObj, {
+      v:1976,
+      duration:1.5,
+      ease:'power3.out',
+      onUpdate:() => { bigYear.textContent = Math.round(yearObj.v); }
+    });
+  }
+});
+
+/* ============================================================
+   THREE.JS — HERO SHELF
+   ============================================================ */
+const heroCanvas = document.getElementById('hero-canvas');
+let shelfState = null;
+
+function initShelf(){
+  const wrap = heroCanvas.parentElement;
+  let width = wrap.clientWidth;
+  let height = wrap.clientHeight;
+
+  const renderer = new THREE.WebGLRenderer({
+    canvas:heroCanvas,
+    antialias:true,
+    alpha:true
+  });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(width, height, false);
+  renderer.setClearColor(0x000000, 0);
+
+  const scene = new THREE.Scene();
+
+  const camera = new THREE.PerspectiveCamera(38, width/height, 0.1, 200);
+  const baseCam = new THREE.Vector3(-3.4, 2.4, 12);
+  camera.position.copy(baseCam);
+  camera.lookAt(0, 0.5, 0);
+
+  // Lights
+  const ambient = new THREE.AmbientLight(0xF0ECE4, 0.55);
+  scene.add(ambient);
+  const dir = new THREE.DirectionalLight(0x1E4FD8, 0.65);
+  dir.position.set(-6, 8, 6);
+  scene.add(dir);
+  const fill = new THREE.DirectionalLight(0xF0ECE4, 0.22);
+  fill.position.set(6, 4, 6);
+  scene.add(fill);
+
+  // Shelf group
+  const shelf = new THREE.Group();
+  scene.add(shelf);
+
+  const COBALT = 0x1E4FD8;
+  const PAPER  = 0xF0ECE4;
+
+  const SHELF_COUNT   = 5;
+  const SHELF_WIDTH   = 8.2;
+  const SHELF_DEPTH   = 2.4;
+  const SHELF_THICK   = 0.08;
+  const VERT_SPACING  = 1.55;
+  const TOTAL_HEIGHT  = (SHELF_COUNT - 1) * VERT_SPACING;
+
+  // Materials
+  const wireStructMat = new THREE.MeshBasicMaterial({
+    color:COBALT, wireframe:true, transparent:true, opacity:0.5
+  });
+  const productFillMat = new THREE.MeshLambertMaterial({
+    color:PAPER, transparent:true, opacity:0.18
+  });
+  const productWireMat = new THREE.MeshBasicMaterial({
+    color:COBALT, wireframe:true, transparent:true, opacity:0.65
+  });
+
+  // Side supports
+  const supportGeo = new THREE.BoxGeometry(0.10, TOTAL_HEIGHT + 0.4, SHELF_DEPTH);
+  const supportL = new THREE.Mesh(supportGeo, wireStructMat);
+  supportL.position.set(-SHELF_WIDTH/2 + 0.05, TOTAL_HEIGHT/2 - VERT_SPACING*((SHELF_COUNT-1)/2), 0);
+  const supportR = supportL.clone();
+  supportR.position.x = SHELF_WIDTH/2 - 0.05;
+  shelf.add(supportL, supportR);
+
+  // Back panel outline (subtle depth)
+  const backGeo = new THREE.BoxGeometry(SHELF_WIDTH, TOTAL_HEIGHT + 0.4, 0.02);
+  const backMat = new THREE.MeshBasicMaterial({ color:COBALT, wireframe:true, transparent:true, opacity:0.18 });
+  const back = new THREE.Mesh(backGeo, backMat);
+  back.position.set(0, TOTAL_HEIGHT/2 - VERT_SPACING*((SHELF_COUNT-1)/2), -SHELF_DEPTH/2 + 0.01);
+  shelf.add(back);
+
+  // Shelves + products
+  const products = [];
+  const shelfBoards = [];
+
+  const boardGeo = new THREE.BoxGeometry(SHELF_WIDTH, SHELF_THICK, SHELF_DEPTH);
+
+  for(let i = 0; i < SHELF_COUNT; i++){
+    const y = -TOTAL_HEIGHT/2 + i * VERT_SPACING;
+    const board = new THREE.Mesh(boardGeo, wireStructMat);
+    board.position.set(0, y, 0);
+    shelf.add(board);
+    shelfBoards.push(board);
+
+    if(i === SHELF_COUNT - 1) continue; // top board has no products above
+
+    // Distribute 6-8 product blocks along this board
+    const count = 6 + Math.floor(Math.random() * 3);
+    const usable = SHELF_WIDTH - 0.5;
+    const slot = usable / count;
+
+    for(let j = 0; j < count; j++){
+      const w = slot * (0.55 + Math.random() * 0.35);
+      const h = 0.55 + Math.random() * 0.85; // vary heights
+      const d = SHELF_DEPTH * (0.55 + Math.random() * 0.25);
+      const x = -usable/2 + slot * (j + 0.5) + (Math.random() - 0.5) * 0.05;
+      const finalY = y + SHELF_THICK/2 + h/2;
+
+      const geo = new THREE.BoxGeometry(w, h, d);
+
+      // Group: fill + wireframe overlay
+      const group = new THREE.Group();
+      const fillMesh = new THREE.Mesh(geo, productFillMat.clone());
+      const wireMesh = new THREE.Mesh(geo, productWireMat.clone());
+      group.add(fillMesh, wireMesh);
+
+      // Start below the board (hidden), animate up
+      group.position.set(x, y - 1.4, (Math.random() - 0.5) * 0.2);
+      group.userData = { finalY, delay: (products.length) * 0.055 };
+      shelf.add(group);
+      products.push(group);
+    }
+  }
+
+  // Slightly recenter shelf vertically
+  shelf.position.y = 0.2;
+
+  // Stock animation
+  products.forEach((p) => {
+    gsap.set(p.children, { });
+    gsap.to(p.position, {
+      y: p.userData.finalY,
+      duration: 0.6,
+      delay: 0.35 + p.userData.delay,
+      ease: 'power3.out'
+    });
+    // fade in wire + fill slightly for extra polish
+    const startFill = p.children[0].material.opacity;
+    const startWire = p.children[1].material.opacity;
+    p.children[0].material.opacity = 0;
+    p.children[1].material.opacity = 0;
+    gsap.to(p.children[0].material, {
+      opacity: startFill,
+      duration: 0.6,
+      delay: 0.35 + p.userData.delay,
+      ease: 'power2.out'
+    });
+    gsap.to(p.children[1].material, {
+      opacity: startWire,
+      duration: 0.6,
+      delay: 0.35 + p.userData.delay,
+      ease: 'power2.out'
+    });
+  });
+
+  // Mouse parallax
+  const mouse = { x:0, y:0, tx:0, ty:0 };
+  window.addEventListener('mousemove', (e) => {
+    mouse.tx = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.ty = (e.clientY / window.innerHeight) * 2 - 1;
+  });
+
+  // Scroll push (camera moves in as user scrolls the hero)
+  let scrollProgress = 0;
+  const heroEl = document.querySelector('.hero');
+  ScrollTrigger.create({
+    trigger: heroEl,
+    start: 'top top',
+    end: 'bottom top',
+    scrub: 0.6,
+    onUpdate: (self) => { scrollProgress = self.progress; }
+  });
+
+  // Resize
+  const resize = () => {
+    width = wrap.clientWidth;
+    height = wrap.clientHeight;
+    renderer.setSize(width, height, false);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+  };
+  window.addEventListener('resize', resize);
+
+  // Loop
+  const clock = new THREE.Clock();
+  function tick(){
+    const dt = clock.getDelta();
+
+    // Auto-rotate
+    shelf.rotation.y += 0.18 * dt; // ~0.003 rad/frame at 60fps
+
+    // Mouse parallax lerp
+    mouse.x += (mouse.tx - mouse.x) * 0.05;
+    mouse.y += (mouse.ty - mouse.y) * 0.05;
+
+    // Camera position: base + parallax + scroll push
+    const zPush = scrollProgress * 4.2; // moves closer as user scrolls
+    camera.position.x = baseCam.x + mouse.x * 0.6;
+    camera.position.y = baseCam.y + -mouse.y * 0.4;
+    camera.position.z = baseCam.z - zPush;
+    camera.lookAt(0, 0.5, 0);
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(tick);
+  }
+  tick();
+
+  shelfState = { renderer, scene, camera, shelf };
+}
+
+if(typeof THREE !== 'undefined'){
+  // wait for layout to settle
+  requestAnimationFrame(() => initShelf());
+}
+
+/* ============================================================
+   HERO ENTRANCE TIMELINE
+   ============================================================ */
+const heroTL = gsap.timeline({ delay: reduceMotion ? 0 : 1.15 });
+heroTL
+  .to('[data-hero="eyebrow"]',  { opacity:1, y:0, duration:0.7, ease:'power3.out' })
+  .to('[data-hero="headline"]', { opacity:1, y:0, duration:0.85, ease:'power3.out' }, '+=0.15')
+  .to('[data-hero="sub"]',      { opacity:1, y:0, duration:0.7, ease:'power3.out' }, '+=0.15')
+  .to('[data-hero="ctas"]',     { opacity:1, y:0, duration:0.7, ease:'power3.out' }, '+=0.15');
+
+/* Refresh ScrollTrigger after fonts settle */
+window.addEventListener('load', () => {
+  ScrollTrigger.refresh();
+});
+</script>
+</body>
+</html>
