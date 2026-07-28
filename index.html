@@ -1350,20 +1350,24 @@ function initShelf(){
   const VERT_SPACING  = 1.55;
   const TOTAL_HEIGHT  = (SHELF_COUNT - 1) * VERT_SPACING;
 
-  // Materials
-  const wireStructMat = new THREE.MeshBasicMaterial({
-    color:COBALT, wireframe:true, transparent:true, opacity:0.5
+  // Materials — LineBasicMaterial for edges (no z-fighting with fill meshes)
+  const structLineMat = new THREE.LineBasicMaterial({
+    color:COBALT, transparent:true, opacity:0.5
+  });
+  const backLineMat = new THREE.LineBasicMaterial({
+    color:COBALT, transparent:true, opacity:0.18
   });
   const productFillMat = new THREE.MeshLambertMaterial({
-    color:PAPER, transparent:true, opacity:0.18
+    color:PAPER, transparent:true, opacity:0.18, depthWrite:false
   });
-  const productWireMat = new THREE.MeshBasicMaterial({
-    color:COBALT, wireframe:true, transparent:true, opacity:0.65
+  const productLineMat = new THREE.LineBasicMaterial({
+    color:COBALT, transparent:true, opacity:0.65
   });
 
-  // Side supports
+  // Side supports (edges only)
   const supportGeo = new THREE.BoxGeometry(0.10, TOTAL_HEIGHT + 0.4, SHELF_DEPTH);
-  const supportL = new THREE.Mesh(supportGeo, wireStructMat);
+  const supportEdges = new THREE.EdgesGeometry(supportGeo);
+  const supportL = new THREE.LineSegments(supportEdges, structLineMat);
   supportL.position.set(-SHELF_WIDTH/2 + 0.05, TOTAL_HEIGHT/2 - VERT_SPACING*((SHELF_COUNT-1)/2), 0);
   const supportR = supportL.clone();
   supportR.position.x = SHELF_WIDTH/2 - 0.05;
@@ -1371,8 +1375,8 @@ function initShelf(){
 
   // Back panel outline (subtle depth)
   const backGeo = new THREE.BoxGeometry(SHELF_WIDTH, TOTAL_HEIGHT + 0.4, 0.02);
-  const backMat = new THREE.MeshBasicMaterial({ color:COBALT, wireframe:true, transparent:true, opacity:0.18 });
-  const back = new THREE.Mesh(backGeo, backMat);
+  const backEdges = new THREE.EdgesGeometry(backGeo);
+  const back = new THREE.LineSegments(backEdges, backLineMat);
   back.position.set(0, TOTAL_HEIGHT/2 - VERT_SPACING*((SHELF_COUNT-1)/2), -SHELF_DEPTH/2 + 0.01);
   shelf.add(back);
 
@@ -1381,10 +1385,11 @@ function initShelf(){
   const shelfBoards = [];
 
   const boardGeo = new THREE.BoxGeometry(SHELF_WIDTH, SHELF_THICK, SHELF_DEPTH);
+  const boardEdges = new THREE.EdgesGeometry(boardGeo);
 
   for(let i = 0; i < SHELF_COUNT; i++){
     const y = -TOTAL_HEIGHT/2 + i * VERT_SPACING;
-    const board = new THREE.Mesh(boardGeo, wireStructMat);
+    const board = new THREE.LineSegments(boardEdges, structLineMat);
     board.position.set(0, y, 0);
     shelf.add(board);
     shelfBoards.push(board);
@@ -1404,11 +1409,12 @@ function initShelf(){
       const finalY = y + SHELF_THICK/2 + h/2;
 
       const geo = new THREE.BoxGeometry(w, h, d);
+      const edges = new THREE.EdgesGeometry(geo);
 
-      // Group: fill + wireframe overlay
+      // Group: solid fill + clean edge outline (no wireframe z-fighting)
       const group = new THREE.Group();
       const fillMesh = new THREE.Mesh(geo, productFillMat.clone());
-      const wireMesh = new THREE.Mesh(geo, productWireMat.clone());
+      const wireMesh = new THREE.LineSegments(edges, productLineMat.clone());
       group.add(fillMesh, wireMesh);
 
       // Start below the board (hidden), animate up
