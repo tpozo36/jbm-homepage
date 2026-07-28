@@ -1169,6 +1169,12 @@ p{text-wrap:pretty}
   </div>
 </footer>
 
+<!-- Tooltip for hovered shelf products (must exist before scripts run) -->
+<div id="product-tooltip" class="product-tip" role="status" aria-live="polite" aria-hidden="true">
+  <span class="product-tip-name"></span>
+  <span class="product-tip-desc"></span>
+</div>
+
 <!-- =========================================================
      LIBS
      ========================================================= -->
@@ -1671,11 +1677,5 @@ window.addEventListener('load', () => {
   ScrollTrigger.refresh();
 });
 </script>
-
-<!-- Tooltip for hovered shelf products -->
-<div id="product-tooltip" class="product-tip" role="status" aria-live="polite" aria-hidden="true">
-  <span class="product-tip-name"></span>
-  <span class="product-tip-desc"></span>
-</div>
 </body>
 </html>
