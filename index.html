@@ -679,7 +679,11 @@ p{text-wrap:pretty}
   -webkit-text-stroke:1px rgba(107,101,96,.18);
   margin:0 0 clamp(40px, 5vw, 68px);
   user-select:none;
-  font-variant-numeric:lining-nums;
+  font-variant-numeric:lining-nums tabular-nums;
+  font-feature-settings:"tnum" 1, "lnum" 1;
+  text-rendering:geometricPrecision;
+  opacity:0;
+  will-change:opacity;
 }
 .pillar-grid{
   display:grid; grid-template-columns:1fr 1fr; gap:22px;
@@ -1342,10 +1346,13 @@ ScrollTrigger.create({
   start:'top 78%',
   once:true,
   onEnter:() => {
+    // Fade the number in as it counts — reads as "materializing" rather than flickering
+    gsap.to(bigYear, { opacity:1, duration:2.8, ease:'power2.out' });
+    // Slow, gentle count so digits stay readable throughout (no fast-flicker phase)
     gsap.to(yearObj, {
       v:1976,
-      duration:1.5,
-      ease:'power3.out',
+      duration:2.8,
+      ease:'power2.out',
       onUpdate:() => { bigYear.textContent = Math.round(yearObj.v); }
     });
   }
