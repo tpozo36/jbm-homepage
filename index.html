@@ -1358,7 +1358,7 @@ function initShelf(){
     color:COBALT, transparent:true, opacity:0.18
   });
   const productFillMat = new THREE.MeshLambertMaterial({
-    color:PAPER, transparent:true, opacity:0.18, depthWrite:false
+    color:PAPER, transparent:true, opacity:0.18
   });
   const productLineMat = new THREE.LineBasicMaterial({
     color:COBALT, transparent:true, opacity:0.65
@@ -1487,19 +1487,23 @@ function initShelf(){
   // Loop
   const clock = new THREE.Clock();
   function tick(){
-    const dt = clock.getDelta();
+    // Clamp dt: after tab blur, getDelta can return several seconds
+    // and slam rotation forward in one frame. Cap at 50ms (~20fps floor).
+    const dt = Math.min(clock.getDelta(), 0.05);
 
-    // Auto-rotate
-    shelf.rotation.y += 0.18 * dt; // ~0.003 rad/frame at 60fps
+    // Auto-rotate — subtle, meditative pace
+    shelf.rotation.y += 0.06 * dt;
 
-    // Mouse parallax lerp
-    mouse.x += (mouse.tx - mouse.x) * 0.05;
-    mouse.y += (mouse.ty - mouse.y) * 0.05;
+    // Mouse parallax lerp — frame-rate-independent smoothing
+    // (behaves the same at 60Hz, 120Hz, or during frame drops)
+    const lerp = 1 - Math.exp(-3 * dt);
+    mouse.x += (mouse.tx - mouse.x) * lerp;
+    mouse.y += (mouse.ty - mouse.y) * lerp;
 
     // Camera position: base + parallax + scroll push
     const zPush = scrollProgress * 4.2; // moves closer as user scrolls
-    camera.position.x = baseCam.x + mouse.x * 0.6;
-    camera.position.y = baseCam.y + -mouse.y * 0.4;
+    camera.position.x = baseCam.x + mouse.x * 0.45;
+    camera.position.y = baseCam.y + -mouse.y * 0.3;
     camera.position.z = baseCam.z - zPush;
     camera.lookAt(0, 0.5, 0);
 
