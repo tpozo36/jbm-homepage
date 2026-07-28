@@ -1313,7 +1313,9 @@ function initShelf(){
   const renderer = new THREE.WebGLRenderer({
     canvas:heroCanvas,
     antialias:true,
-    alpha:true
+    alpha:true,
+    precision:'highp',
+    powerPreference:'high-performance'
   });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(width, height, false);
@@ -1357,11 +1359,8 @@ function initShelf(){
   const backLineMat = new THREE.LineBasicMaterial({
     color:COBALT, transparent:true, opacity:0.18
   });
-  const productFillMat = new THREE.MeshLambertMaterial({
-    color:PAPER, transparent:true, opacity:0.18
-  });
   const productLineMat = new THREE.LineBasicMaterial({
-    color:COBALT, transparent:true, opacity:0.65
+    color:COBALT, transparent:true, opacity:0.7
   });
 
   // Side supports (edges only)
@@ -1411,45 +1410,30 @@ function initShelf(){
       const geo = new THREE.BoxGeometry(w, h, d);
       const edges = new THREE.EdgesGeometry(geo);
 
-      // Group: solid fill + clean edge outline (no wireframe z-fighting)
-      const group = new THREE.Group();
-      const fillMesh = new THREE.Mesh(geo, productFillMat.clone());
+      // Edges only — no fill mesh means no transparency sort issues
       const wireMesh = new THREE.LineSegments(edges, productLineMat.clone());
-      group.add(fillMesh, wireMesh);
-
-      // Start below the board (hidden), animate up
-      group.position.set(x, y - 1.4, (Math.random() - 0.5) * 0.2);
-      group.userData = { finalY, delay: (products.length) * 0.055 };
-      shelf.add(group);
-      products.push(group);
+      wireMesh.position.set(x, y - 1.4, (Math.random() - 0.5) * 0.2);
+      wireMesh.userData = { finalY, delay: (products.length) * 0.055 };
+      shelf.add(wireMesh);
+      products.push(wireMesh);
     }
   }
 
   // Slightly recenter shelf vertically
   shelf.position.y = 0.2;
 
-  // Stock animation
+  // Stock animation — each product is now a single LineSegments
   products.forEach((p) => {
-    gsap.set(p.children, { });
     gsap.to(p.position, {
       y: p.userData.finalY,
       duration: 0.6,
       delay: 0.35 + p.userData.delay,
       ease: 'power3.out'
     });
-    // fade in wire + fill slightly for extra polish
-    const startFill = p.children[0].material.opacity;
-    const startWire = p.children[1].material.opacity;
-    p.children[0].material.opacity = 0;
-    p.children[1].material.opacity = 0;
-    gsap.to(p.children[0].material, {
-      opacity: startFill,
-      duration: 0.6,
-      delay: 0.35 + p.userData.delay,
-      ease: 'power2.out'
-    });
-    gsap.to(p.children[1].material, {
-      opacity: startWire,
+    const startOpacity = p.material.opacity;
+    p.material.opacity = 0;
+    gsap.to(p.material, {
+      opacity: startOpacity,
       duration: 0.6,
       delay: 0.35 + p.userData.delay,
       ease: 'power2.out'
@@ -1487,12 +1471,12 @@ function initShelf(){
   // Loop
   const clock = new THREE.Clock();
   function tick(){
-    // Clamp dt: after tab blur, getDelta can return several seconds
-    // and slam rotation forward in one frame. Cap at 50ms (~20fps floor).
+    // Clamp dt: after tab blur, getDelta can return several seconds.
+    // Cap at 50ms (~20fps floor) so tab-refocus never causes a jump.
     const dt = Math.min(clock.getDelta(), 0.05);
 
-    // Auto-rotate — subtle, meditative pace
-    shelf.rotation.y += 0.06 * dt;
+    // Auto-rotation removed — GL_LINES shimmer on subpixel rotation,
+    // and mouse parallax + scroll push already give the 3D feel.
 
     // Mouse parallax lerp — frame-rate-independent smoothing
     // (behaves the same at 60Hz, 120Hz, or during frame drops)
