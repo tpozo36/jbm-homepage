@@ -834,6 +834,52 @@ p{text-wrap:pretty}
 }
 
 /* ============================================================
+   PRODUCT TOOLTIP (hero shelf)
+   ============================================================ */
+.product-tip{
+  position:fixed;
+  top:0; left:0;
+  z-index:80;
+  padding:12px 16px;
+  background:var(--paper);
+  border:1px solid var(--border);
+  border-radius:8px;
+  box-shadow:0 14px 34px -14px rgba(20,20,20,.35), 0 4px 10px -6px rgba(20,20,20,.15);
+  pointer-events:none;
+  opacity:0;
+  transform:translate(14px, 14px);
+  transition:opacity .2s var(--ease-out);
+  max-width:240px;
+  font-family:var(--sans);
+  will-change:transform, opacity;
+}
+.product-tip.is-visible{opacity:1}
+.product-tip-name{
+  display:block;
+  font-family:var(--serif);
+  font-weight:700;
+  font-size:15px;
+  line-height:1.2;
+  color:var(--ink);
+  margin-bottom:4px;
+}
+.product-tip-name::before{
+  content:"";
+  display:inline-block;
+  width:8px; height:1px;
+  background:var(--cobalt);
+  margin-right:8px;
+  vertical-align:middle;
+  transform:translateY(-2px);
+}
+.product-tip-desc{
+  display:block;
+  font-size:12.5px;
+  line-height:1.5;
+  color:var(--mid);
+}
+
+/* ============================================================
    MOTION SAFETY
    ============================================================ */
 @media (prefers-reduced-motion: reduce){
@@ -1379,13 +1425,45 @@ function initShelf(){
   back.position.set(0, TOTAL_HEIGHT/2 - VERT_SPACING*((SHELF_COUNT-1)/2), -SHELF_DEPTH/2 + 0.01);
   shelf.add(back);
 
+  // Product roster — 24 brands, one per shelf slot (6 per shelf × 4 shelves).
+  // PLACEHOLDER LIST: swap for JBM's real client brands.
+  const PRODUCTS = [
+    { name:"Annie's",           desc:"Organic mac & cheese, natural channel staple." },
+    { name:"Justin's",          desc:"Nut butter squeeze packs, impulse and center-store." },
+    { name:"Kind",              desc:"Nut and grain bars, wellness set." },
+    { name:"Rao's",             desc:"Premium jarred sauces, specialty grocery." },
+    { name:"Stonewall Kitchen", desc:"Specialty preserves and pantry, gift-set anchor." },
+    { name:"Sir Kensington's",  desc:"Better-for-you condiments, natural channel." },
+    { name:"Chosen Foods",      desc:"Avocado oil and clean dressings." },
+    { name:"Hu Chocolate",      desc:"Paleo dark chocolate, specialty confectionery." },
+    { name:"YumEarth",          desc:"Organic candy, natural confections set." },
+    { name:"SmartSweets",       desc:"Low-sugar candy, wellness confections." },
+    { name:"Enjoy Life",        desc:"Allergy-friendly baking and snacks." },
+    { name:"OXO",               desc:"Kitchen tools and gadgets, housewares mainstay." },
+    { name:"Lodge",             desc:"Cast iron cookware, hard goods." },
+    { name:"Stella & Chewy's",  desc:"Freeze-dried raw pet food, premium." },
+    { name:"Open Farm",         desc:"Traceable premium pet food." },
+    { name:"Anker",             desc:"Consumer electronics and charging." },
+    { name:"Hydro Flask",       desc:"Insulated drinkware, outdoor and lifestyle." },
+    { name:"Yeti",              desc:"Premium coolers and drinkware." },
+    { name:"Cotopaxi",          desc:"Outdoor apparel and gear." },
+    { name:"Olly",              desc:"Gummy vitamins and wellness." },
+    { name:"New Chapter",       desc:"Organic supplements, wellness set." },
+    { name:"Ritual",            desc:"Traceable multivitamins, direct-to-shelf." },
+    { name:"Garden of Life",    desc:"Organic supplements, natural channel leader." },
+    { name:"RxBar",             desc:"Whole-food protein bars." }
+  ];
+
   // Shelves + products
   const products = [];
   const shelfBoards = [];
+  const hitMeshes = []; // separate array for raycaster targets
 
   const boardGeo = new THREE.BoxGeometry(SHELF_WIDTH, SHELF_THICK, SHELF_DEPTH);
   const boardEdges = new THREE.EdgesGeometry(boardGeo);
+  const hitMat = new THREE.MeshBasicMaterial({ visible:false });
 
+  let productIndex = 0;
   for(let i = 0; i < SHELF_COUNT; i++){
     const y = -TOTAL_HEIGHT/2 + i * VERT_SPACING;
     const board = new THREE.LineSegments(boardEdges, structLineMat);
@@ -1395,8 +1473,7 @@ function initShelf(){
 
     if(i === SHELF_COUNT - 1) continue; // top board has no products above
 
-    // Distribute 6-8 product blocks along this board
-    const count = 6 + Math.floor(Math.random() * 3);
+    const count = 6; // fixed — one per PRODUCTS entry (6 per shelf × 4 shelves = 24)
     const usable = SHELF_WIDTH - 0.5;
     const slot = usable / count;
 
@@ -1409,20 +1486,32 @@ function initShelf(){
 
       const geo = new THREE.BoxGeometry(w, h, d);
       const edges = new THREE.EdgesGeometry(geo);
-
-      // Edges only — no fill mesh means no transparency sort issues
       const wireMesh = new THREE.LineSegments(edges, productLineMat.clone());
-      wireMesh.position.set(x, y - 1.4, (Math.random() - 0.5) * 0.2);
-      wireMesh.userData = { finalY, delay: (products.length) * 0.055 };
-      shelf.add(wireMesh);
-      products.push(wireMesh);
+      const hitMesh = new THREE.Mesh(geo, hitMat); // invisible, for raycasting
+
+      const productGroup = new THREE.Group();
+      productGroup.add(wireMesh);
+      productGroup.add(hitMesh);
+      productGroup.position.set(x, y - 1.4, (Math.random() - 0.5) * 0.2);
+      productGroup.userData = {
+        finalY,
+        delay: products.length * 0.055,
+        brand: PRODUCTS[productIndex],
+        wireMesh,
+        baseColor: wireMesh.material.color.clone()
+      };
+      hitMesh.userData.productGroup = productGroup; // back-reference for raycast
+      shelf.add(productGroup);
+      products.push(productGroup);
+      hitMeshes.push(hitMesh);
+      productIndex++;
     }
   }
 
   // Slightly recenter shelf vertically
   shelf.position.y = 0.2;
 
-  // Stock animation — each product is now a single LineSegments
+  // Stock animation — animate group position + wire opacity
   products.forEach((p) => {
     gsap.to(p.position, {
       y: p.userData.finalY,
@@ -1430,15 +1519,76 @@ function initShelf(){
       delay: 0.35 + p.userData.delay,
       ease: 'power3.out'
     });
-    const startOpacity = p.material.opacity;
-    p.material.opacity = 0;
-    gsap.to(p.material, {
+    const wireMat = p.userData.wireMesh.material;
+    const startOpacity = wireMat.opacity;
+    wireMat.opacity = 0;
+    gsap.to(wireMat, {
       opacity: startOpacity,
       duration: 0.6,
       delay: 0.35 + p.userData.delay,
       ease: 'power2.out'
     });
   });
+
+  // ================================================================
+  // HOVER — raycaster + tooltip
+  // ================================================================
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2(-10, -10); // start off-screen
+  let pointerActive = false;
+  let hoveredProduct = null;
+
+  const tooltip = document.getElementById('product-tooltip');
+  const tooltipName = tooltip.querySelector('.product-tip-name');
+  const tooltipDesc = tooltip.querySelector('.product-tip-desc');
+  const paperColor = new THREE.Color(PAPER);
+
+  heroCanvas.addEventListener('pointermove', (e) => {
+    const rect = heroCanvas.getBoundingClientRect();
+    pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    pointerActive = true;
+    tooltip.style.left = e.clientX + 'px';
+    tooltip.style.top = e.clientY + 'px';
+  });
+
+  heroCanvas.addEventListener('pointerleave', () => {
+    pointerActive = false;
+    clearHover();
+  });
+
+  function clearHover(){
+    if(hoveredProduct){
+      const wire = hoveredProduct.userData.wireMesh;
+      const base = hoveredProduct.userData.baseColor;
+      gsap.to(wire.material.color, { r:base.r, g:base.g, b:base.b, duration:0.25 });
+      gsap.to(hoveredProduct.position, { y:hoveredProduct.userData.finalY, duration:0.3, ease:'power2.out' });
+      hoveredProduct = null;
+    }
+    tooltip.classList.remove('is-visible');
+  }
+
+  function updateHover(){
+    if(!pointerActive) return;
+    raycaster.setFromCamera(pointer, camera);
+    const intersects = raycaster.intersectObjects(hitMeshes, false);
+    if(intersects.length > 0){
+      const productGroup = intersects[0].object.userData.productGroup;
+      if(hoveredProduct !== productGroup){
+        clearHover();
+        hoveredProduct = productGroup;
+        const wire = productGroup.userData.wireMesh;
+        gsap.to(wire.material.color, { r:paperColor.r, g:paperColor.g, b:paperColor.b, duration:0.2 });
+        gsap.to(productGroup.position, { y:productGroup.userData.finalY + 0.18, duration:0.28, ease:'power2.out' });
+        const brand = productGroup.userData.brand;
+        tooltipName.textContent = brand.name;
+        tooltipDesc.textContent = brand.desc;
+        tooltip.classList.add('is-visible');
+      }
+    } else if(hoveredProduct){
+      clearHover();
+    }
+  }
 
   // Mouse parallax
   const mouse = { x:0, y:0, tx:0, ty:0 };
@@ -1491,6 +1641,8 @@ function initShelf(){
     camera.position.z = baseCam.z - zPush;
     camera.lookAt(0, 0.5, 0);
 
+    updateHover(); // raycast + tooltip state
+
     renderer.render(scene, camera);
     requestAnimationFrame(tick);
   }
@@ -1519,5 +1671,11 @@ window.addEventListener('load', () => {
   ScrollTrigger.refresh();
 });
 </script>
+
+<!-- Tooltip for hovered shelf products -->
+<div id="product-tooltip" class="product-tip" role="status" aria-live="polite" aria-hidden="true">
+  <span class="product-tip-name"></span>
+  <span class="product-tip-desc"></span>
+</div>
 </body>
 </html>
