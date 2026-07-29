@@ -658,30 +658,43 @@ p{text-wrap:pretty}
   .philo-key{padding-top:0; font-size:20px}
 }
 
-/* Liquid cursor follower (philosophy section only) */
+/* Liquid metaball cursor (philosophy section only) — replaces native cursor */
 .philosophy{position:relative}
+@media (hover: hover) and (pointer: fine){
+  .philosophy, .philosophy *{cursor:none}
+}
+
 .philo-cursor{
   position:fixed;
   top:0; left:0;
-  width:96px; height:96px;
-  margin-left:-48px; margin-top:-48px;
-  border-radius:50%;
-  background:radial-gradient(circle, rgba(30,79,216,.55) 0%, rgba(30,79,216,.18) 42%, rgba(30,79,216,0) 68%);
+  width:100vw; height:100vh;
   pointer-events:none;
-  opacity:0;
   z-index:5;
-  filter:blur(3px);
-  mix-blend-mode:screen;
-  transition:opacity .4s var(--ease-out),
-             width .45s var(--ease-out), height .45s var(--ease-out),
-             margin .45s var(--ease-out);
-  will-change:transform, opacity;
+  filter:url(#philo-goo);
+  opacity:0;
+  transition:opacity .35s var(--ease-out);
+  will-change:opacity;
 }
 .philo-cursor.is-active{opacity:1}
-.philo-cursor.is-over-text{
-  width:160px; height:160px;
-  margin-left:-80px; margin-top:-80px;
+
+.philo-cursor .blob{
+  position:absolute;
+  top:0; left:0;
+  will-change:transform; /* outer moves via JS-set translate3d */
 }
+.philo-cursor .blob-shape{
+  border-radius:50%;
+  background:var(--cobalt);
+  transform-origin:center center;
+  transform:scale(1);
+  transition:transform .35s var(--ease-out);
+  will-change:transform;
+}
+.philo-cursor .blob-1 .blob-shape{width:52px; height:52px; margin:-26px 0 0 -26px}
+.philo-cursor .blob-2 .blob-shape{width:38px; height:38px; margin:-19px 0 0 -19px}
+.philo-cursor .blob-3 .blob-shape{width:28px; height:28px; margin:-14px 0 0 -14px}
+
+.philo-cursor.is-over-text .blob-shape{transform:scale(2.15)}
 
 /* Text hover color shift — warm gold complements the cobalt cursor */
 .philosophy .philo-body h3,
@@ -699,9 +712,11 @@ p{text-wrap:pretty}
 
 /* Hide cursor on touch devices and under reduced motion */
 @media (hover: none), (pointer: coarse){
+  .philosophy, .philosophy *{cursor:auto}
   .philo-cursor{display:none}
 }
 @media (prefers-reduced-motion: reduce){
+  .philosophy, .philosophy *{cursor:auto}
   .philo-cursor{display:none}
 }
 
@@ -1136,7 +1151,11 @@ p{text-wrap:pretty}
       </div>
     </div>
   </div>
-  <div class="philo-cursor" aria-hidden="true"></div>
+  <div class="philo-cursor" aria-hidden="true">
+    <div class="blob blob-1"><div class="blob-shape"></div></div>
+    <div class="blob blob-2"><div class="blob-shape"></div></div>
+    <div class="blob blob-3"><div class="blob-shape"></div></div>
+  </div>
 </section>
 
 <!-- =========================================================
@@ -1226,6 +1245,17 @@ p{text-wrap:pretty}
   <span class="product-tip-name"></span>
   <span class="product-tip-desc"></span>
 </div>
+
+<!-- SVG goo filter for the philosophy liquid cursor -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="philo-goo">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
+      <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="goo" />
+      <feBlend in="SourceGraphic" in2="goo" />
+    </filter>
+  </defs>
+</svg>
 
 <!-- =========================================================
      LIBS
@@ -1728,7 +1758,7 @@ heroTL
   .to('[data-hero="ctas"]',     { opacity:1, y:0, duration:0.5, ease:'power3.out' }, '-=0.2');
 
 /* ============================================================
-   PHILOSOPHY LIQUID CURSOR
+   PHILOSOPHY LIQUID CURSOR — 3 metaballs at different lag speeds
    ============================================================ */
 (() => {
   const philoCursor = document.querySelector('.philo-cursor');
@@ -1737,13 +1767,18 @@ heroTL
   if(!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
   if(reduceMotion) return;
 
-  const textEls = philosophySection.querySelectorAll('.philo-body h3, .philo-body p, .philo-key');
-  const pos = { x: 0, y: 0, tx: 0, ty: 0 };
+  const blobs = [
+    { el: philoCursor.querySelector('.blob-1'), x: 0, y: 0, lag: 0.28 },
+    { el: philoCursor.querySelector('.blob-2'), x: 0, y: 0, lag: 0.18 },
+    { el: philoCursor.querySelector('.blob-3'), x: 0, y: 0, lag: 0.11 }
+  ];
+  const target = { x: 0, y: 0 };
   let active = false;
 
   philosophySection.addEventListener('pointerenter', (e) => {
-    pos.x = pos.tx = e.clientX;
-    pos.y = pos.ty = e.clientY;
+    target.x = e.clientX;
+    target.y = e.clientY;
+    blobs.forEach(b => { b.x = target.x; b.y = target.y; }); // snap to entry point
     active = true;
     philoCursor.classList.add('is-active');
   });
@@ -1752,10 +1787,11 @@ heroTL
     philoCursor.classList.remove('is-active', 'is-over-text');
   });
   philosophySection.addEventListener('pointermove', (e) => {
-    pos.tx = e.clientX;
-    pos.ty = e.clientY;
+    target.x = e.clientX;
+    target.y = e.clientY;
   });
 
+  const textEls = philosophySection.querySelectorAll('.philo-body h3, .philo-body p, .philo-key');
   textEls.forEach(el => {
     el.addEventListener('pointerenter', () => philoCursor.classList.add('is-over-text'));
     el.addEventListener('pointerleave', () => philoCursor.classList.remove('is-over-text'));
@@ -1763,9 +1799,11 @@ heroTL
 
   function tick(){
     if(active){
-      pos.x += (pos.tx - pos.x) * 0.18;
-      pos.y += (pos.ty - pos.y) * 0.18;
-      philoCursor.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0)`;
+      blobs.forEach(b => {
+        b.x += (target.x - b.x) * b.lag;
+        b.y += (target.y - b.y) * b.lag;
+        b.el.style.transform = `translate3d(${b.x}px, ${b.y}px, 0)`;
+      });
     }
     requestAnimationFrame(tick);
   }
