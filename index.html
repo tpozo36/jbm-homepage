@@ -658,7 +658,7 @@ p{text-wrap:pretty}
   .philo-key{padding-top:0; font-size:20px}
 }
 
-/* Liquid metaball cursor (philosophy section only) — replaces native cursor */
+/* Cartoon jelly cursor (philosophy section only) — replaces native cursor */
 .philosophy{position:relative}
 @media (hover: hover) and (pointer: fine){
   .philosophy, .philosophy *{cursor:none}
@@ -667,34 +667,28 @@ p{text-wrap:pretty}
 .philo-cursor{
   position:fixed;
   top:0; left:0;
-  width:100vw; height:100vh;
   pointer-events:none;
   z-index:5;
-  filter:url(#philo-goo);
   opacity:0;
   transition:opacity .35s var(--ease-out);
-  will-change:opacity;
+  will-change:transform, opacity;
+  /* Position (translate) and squash-stretch (rotate + scale) set by JS */
 }
 .philo-cursor.is-active{opacity:1}
 
-.philo-cursor .blob{
-  position:absolute;
-  top:0; left:0;
-  will-change:transform; /* outer moves via JS-set translate3d */
-}
 .philo-cursor .blob-shape{
+  width:44px; height:44px;
+  margin:-22px 0 0 -22px;
   border-radius:50%;
   background:var(--cobalt);
+  box-shadow:0 0 0 3px rgba(30,79,216,.18);
   transform-origin:center center;
   transform:scale(1);
   transition:transform .35s var(--ease-out);
   will-change:transform;
 }
-.philo-cursor .blob-1 .blob-shape{width:52px; height:52px; margin:-26px 0 0 -26px}
-.philo-cursor .blob-2 .blob-shape{width:38px; height:38px; margin:-19px 0 0 -19px}
-.philo-cursor .blob-3 .blob-shape{width:28px; height:28px; margin:-14px 0 0 -14px}
 
-.philo-cursor.is-over-text .blob-shape{transform:scale(2.15)}
+.philo-cursor.is-over-text .blob-shape{transform:scale(2)}
 
 /* Text hover color shift — warm gold complements the cobalt cursor */
 .philosophy .philo-body h3,
@@ -1152,9 +1146,7 @@ p{text-wrap:pretty}
     </div>
   </div>
   <div class="philo-cursor" aria-hidden="true">
-    <div class="blob blob-1"><div class="blob-shape"></div></div>
-    <div class="blob blob-2"><div class="blob-shape"></div></div>
-    <div class="blob blob-3"><div class="blob-shape"></div></div>
+    <div class="blob-shape"></div>
   </div>
 </section>
 
@@ -1246,16 +1238,6 @@ p{text-wrap:pretty}
   <span class="product-tip-desc"></span>
 </div>
 
-<!-- SVG goo filter for the philosophy liquid cursor -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <defs>
-    <filter id="philo-goo">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
-      <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="goo" />
-      <feBlend in="SourceGraphic" in2="goo" />
-    </filter>
-  </defs>
-</svg>
 
 <!-- =========================================================
      LIBS
@@ -1758,7 +1740,7 @@ heroTL
   .to('[data-hero="ctas"]',     { opacity:1, y:0, duration:0.5, ease:'power3.out' }, '-=0.2');
 
 /* ============================================================
-   PHILOSOPHY LIQUID CURSOR — 3 metaballs at different lag speeds
+   PHILOSOPHY CARTOON CURSOR — spring physics + squash-and-stretch
    ============================================================ */
 (() => {
   const philoCursor = document.querySelector('.philo-cursor');
@@ -1767,18 +1749,23 @@ heroTL
   if(!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
   if(reduceMotion) return;
 
-  const blobs = [
-    { el: philoCursor.querySelector('.blob-1'), x: 0, y: 0, lag: 0.28 },
-    { el: philoCursor.querySelector('.blob-2'), x: 0, y: 0, lag: 0.18 },
-    { el: philoCursor.querySelector('.blob-3'), x: 0, y: 0, lag: 0.11 }
-  ];
-  const target = { x: 0, y: 0 };
+  // Spring-physics state — blob has position + velocity, target is the mouse
+  const s = {
+    x: 0, y: 0,     // current position
+    vx: 0, vy: 0,   // velocity
+    tx: 0, ty: 0    // target (mouse)
+  };
+  const SPRING = 0.16;   // pull strength toward mouse
+  const DAMPING = 0.72;  // friction (lower = more overshoot/jelly)
+  const STRETCH_MAX = 0.55; // max stretch factor at high speed
+  const STRETCH_SPEED = 0.045; // how quickly speed maps to stretch
+
   let active = false;
 
   philosophySection.addEventListener('pointerenter', (e) => {
-    target.x = e.clientX;
-    target.y = e.clientY;
-    blobs.forEach(b => { b.x = target.x; b.y = target.y; }); // snap to entry point
+    s.tx = s.x = e.clientX;
+    s.ty = s.y = e.clientY;
+    s.vx = s.vy = 0;
     active = true;
     philoCursor.classList.add('is-active');
   });
@@ -1787,8 +1774,8 @@ heroTL
     philoCursor.classList.remove('is-active', 'is-over-text');
   });
   philosophySection.addEventListener('pointermove', (e) => {
-    target.x = e.clientX;
-    target.y = e.clientY;
+    s.tx = e.clientX;
+    s.ty = e.clientY;
   });
 
   const textEls = philosophySection.querySelectorAll('.philo-body h3, .philo-body p, .philo-key');
@@ -1799,11 +1786,22 @@ heroTL
 
   function tick(){
     if(active){
-      blobs.forEach(b => {
-        b.x += (target.x - b.x) * b.lag;
-        b.y += (target.y - b.y) * b.lag;
-        b.el.style.transform = `translate3d(${b.x}px, ${b.y}px, 0)`;
-      });
+      // Spring: acceleration = (target - position) * springStrength; velocity accumulates; damping bleeds it
+      s.vx += (s.tx - s.x) * SPRING;
+      s.vy += (s.ty - s.y) * SPRING;
+      s.vx *= DAMPING;
+      s.vy *= DAMPING;
+      s.x += s.vx;
+      s.y += s.vy;
+
+      // Squash-and-stretch based on velocity vector
+      const speed = Math.hypot(s.vx, s.vy);
+      const stretch = 1 + Math.min(speed * STRETCH_SPEED, STRETCH_MAX);
+      const squash = 1 / Math.sqrt(stretch); // preserve area feel
+      const angleDeg = Math.atan2(s.vy, s.vx) * 180 / Math.PI;
+
+      philoCursor.style.transform =
+        `translate3d(${s.x}px, ${s.y}px, 0) rotate(${angleDeg}deg) scale(${stretch}, ${squash})`;
     }
     requestAnimationFrame(tick);
   }
