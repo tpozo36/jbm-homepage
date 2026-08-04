@@ -2039,8 +2039,8 @@ async function init3DShelf(){
 
   // ── camera ──────────────────────────────────────────────────
   // Portrait framing to match the reference render.
-  const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 100);
-  const camBase = new THREE.Vector3(0, 0, 4);
+  const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
+  const camBase = new THREE.Vector3(0, 0, 8.5);   // distance set for real in resize()
   camera.position.copy(camBase);
   camera.lookAt(0, 0, 0);
 
@@ -2082,21 +2082,25 @@ async function init3DShelf(){
   });
 
   // ── responsive size ─────────────────────────────────────────
+  // Compute the exact camera distance needed to fit the model's bounding
+  // sphere in the current viewport. Adds 25% padding so the shelf breathes.
+  const boundingSphere = new THREE.Sphere();
+  new THREE.Box3().setFromObject(gltf.scene).getBoundingSphere(boundingSphere);
+  const R = boundingSphere.radius;
+  const PADDING = 1.25;
+
   function resize(){
     const w = wrap.clientWidth;
     const h = wrap.clientHeight;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
-    // Zoom (dolly) based on aspect so the shelf always fills a similar
-    // portion of the viewport (portrait shelf in a landscape wrap → move back).
-    const shelfAspect = 1744 / 2336; // reference aspect
-    const wrapAspect  = w / h;
-    // If viewport is wider than shelf aspect, we need to move back to keep
-    // the shelf's height visible. If narrower, move closer to fill width.
-    const distance = wrapAspect >= shelfAspect
-      ? 4.0 * (shelfAspect / Math.min(wrapAspect, 0.85))
-      : 4.0 * (shelfAspect / wrapAspect);
-    camBase.z = Math.max(3.6, Math.min(6.5, distance));
+    // Distance to fit the model's bounding sphere in the SMALLER of vertical
+    // vs horizontal FOV — whichever axis is more constraining.
+    const vFov = camera.fov * Math.PI / 180;
+    const hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect);
+    const distV = R / Math.sin(vFov / 2);
+    const distH = R / Math.sin(hFov / 2);
+    camBase.z = Math.max(distV, distH) * PADDING;
     camera.updateProjectionMatrix();
   }
   resize();
