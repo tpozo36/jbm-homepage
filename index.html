@@ -590,13 +590,27 @@ p{text-wrap:pretty}
   -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 12%, #000 88%, transparent 100%);
           mask-image:linear-gradient(90deg, transparent 0, #000 12%, #000 88%, transparent 100%);
 }
+/* Mobile Safari can render mask-image + long horizontal animations
+   incorrectly (pills flicker / stall). Drop the mask on phones — the ink
+   background swallows the edge fade anyway. */
+@media (max-width: 640px){
+  .marquee{
+    -webkit-mask-image:none;
+            mask-image:none;
+  }
+}
 .marquee-track{
   display:flex; align-items:center;
   gap:14px;
   width:max-content;
+  /* Force GPU compositing so mobile browsers keep the animation smooth
+     instead of falling back to CPU rasterization (main-thread stalls). */
+  transform:translate3d(0, 0, 0);
   will-change:transform;
+  backface-visibility:hidden;
   animation-timing-function:linear;
   animation-iteration-count:infinite;
+  animation-play-state:running;
 }
 .marquee[data-dir="left"] .marquee-track{animation-name:scrollLeft}
 .marquee[data-dir="right"] .marquee-track{animation-name:scrollRight}
@@ -605,12 +619,12 @@ p{text-wrap:pretty}
 .marquee[data-speed="54"] .marquee-track{animation-duration:54s}
 
 @keyframes scrollLeft{
-  from{transform:translateX(0)}
-  to{transform:translateX(-50%)}
+  from{transform:translate3d(0, 0, 0)}
+  to{transform:translate3d(-50%, 0, 0)}
 }
 @keyframes scrollRight{
-  from{transform:translateX(-50%)}
-  to{transform:translateX(0)}
+  from{transform:translate3d(-50%, 0, 0)}
+  to{transform:translate3d(0, 0, 0)}
 }
 
 .brand-pill{
