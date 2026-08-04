@@ -255,7 +255,8 @@ p{text-wrap:pretty}
   .nav-links .btn-cobalt{color:var(--paper); padding:14px 24px}
   .nav-toggle{
     display:inline-flex; flex-direction:column; gap:5px;
-    width:36px; height:36px; align-items:center; justify-content:center;
+    width:44px; height:44px; align-items:center; justify-content:center;
+    margin-right:-8px;   /* optical: back to original visual edge, bigger tap area */
     z-index:90;
   }
   .nav-toggle span{
@@ -536,13 +537,24 @@ p{text-wrap:pretty}
 }
 @media (max-width: 479px){
   /* Shelf is now a lightweight image so we keep it on small phones —
-     it's the visual anchor of the hero. Just shrink its footprint. */
-  .hero{padding-top:96px; padding-bottom:56px}
-  .hero-grid{gap:28px}
-  .hero-canvas-wrap{height:min(58vw, 380px); min-height:280px}
+     it's the visual anchor of the hero. Constrain to a poster-sized
+     portrait card so it doesn't dominate + doesn't leave dead space. */
+  .hero{padding-top:88px; padding-bottom:48px}
+  .hero-grid{gap:24px}
+  .hero-canvas-wrap{
+    height:auto;
+    min-height:0;
+    aspect-ratio: 3 / 4;      /* matches the shelf image roughly */
+    max-width:280px;
+    margin:0 auto;
+    filter:drop-shadow(0 18px 32px rgba(0,0,0,.28));
+  }
+  .shelf-hero{ filter:none }  /* container handles the shadow now */
   .hero-copy{max-width:100%; display:flex; flex-direction:column; align-items:center; text-align:center}
+  .hero-eyebrow{margin-bottom:20px}
   .hero-eyebrow::before{display:none}
-  .hero-sub{margin-left:auto; margin-right:auto}
+  .hero h1{font-size:clamp(40px, 11.5vw, 56px); margin-bottom:20px}
+  .hero-sub{margin:0 auto 28px; font-size:16px; line-height:1.65}
   .hero-ctas{justify-content:center; width:100%}
   .hero-ctas .btn{flex:1 1 auto; justify-content:center; min-height:52px}
 }
@@ -1284,19 +1296,27 @@ p{text-wrap:pretty}
 }
 
 @media (max-width: 420px){
+  :root{ --section-y: 60px }        /* tighter section rhythm on small phones */
   .shell{ padding-left:20px; padding-right:20px }
   .services-grid{ gap:16px }
   .service-card{ padding:26px 22px }
   .service-card h3{ font-size:22px }
   .service-card p{ font-size:15px; margin-bottom:20px }
+  .services-head, .categories-head, .philosophy-head{ margin-bottom:36px }
   .cta-strip .contact-copy h2{ font-size:clamp(34px, 10vw, 46px) }
   .cta-strip .contact-copy .lede{ font-size:16px; margin-bottom:32px }
+  .cta-strip .contact-stats{ gap:12px }
+  .cta-strip .stat-label{ font-size:10px; letter-spacing:.08em }
   /* Give the contact form horizontal breathing room */
   .contact-form{ padding:22px }
   .contact-form h3{ font-size:22px }
   /* Tighter hero CTAs — stack when very cramped */
   .hero-ctas{ flex-direction:column; align-items:stretch; gap:12px }
   .hero-ctas .btn{ width:100%; text-align:center; justify-content:center }
+  /* Heritage year — don't let it dominate the small viewport */
+  .big-year{ font-size:clamp(80px, 30vw, 120px) }
+  /* Marquee pills a touch smaller so more brands show at a glance */
+  .brand-pill{ font-size:14px; padding:8px 14px }
 }
 </style>
 </head>
