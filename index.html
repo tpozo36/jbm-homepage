@@ -338,51 +338,14 @@ p{text-wrap:pretty}
   min-height:520px;
   display:flex; align-items:center; justify-content:center;
 }
-.shelf-hero{
-  position:absolute; inset:0;
-  width:100%; height:100%;
-  object-fit:contain;
-  object-position:center;
-  display:block;
-  filter:drop-shadow(0 24px 40px rgba(0,0,0,.22));
-  transition:opacity .4s var(--ease-out);
-}
-/* When the 3D scene loads, fade the still image out — canvas takes over */
-.shelf-hero.is-hidden{ opacity:0 }
 .shelf-canvas{
   position:absolute; inset:0;
   width:100%; height:100%;
   display:block;
   opacity:0;
   transition:opacity .5s var(--ease-out);
-  pointer-events:none;   /* SVG on top receives all input */
 }
 .shelf-canvas.is-visible{ opacity:1 }
-/* Mobile: never show canvas — keep the flat img for perf */
-@media (max-width: 640px){
-  .shelf-canvas{ display:none }
-}
-.shelf-hits{
-  position:absolute; inset:0;
-  width:100%; height:100%;
-  pointer-events:none;   /* svg container passes through; only rects catch clicks */
-  overflow:visible;
-}
-.shelf-hits rect{
-  fill:rgba(30,79,216,0);
-  pointer-events:all;
-  cursor:pointer;
-  transition:fill .18s var(--ease-out);
-  rx:6; ry:6;
-}
-@media (hover:hover){
-  .shelf-hits rect:hover{ fill:rgba(30,79,216,.12) }
-}
-.shelf-hits rect:focus-visible{
-  fill:rgba(30,79,216,.16);
-  outline:2px solid var(--paper);
-  outline-offset:-2px;
-}
 
 /* ============================================================
    PRODUCT LIGHTBOX — click a shelf product to see it up close
@@ -536,20 +499,15 @@ p{text-wrap:pretty}
   .hero-sub{margin-bottom:32px}
 }
 @media (max-width: 479px){
-  /* Shelf is now a lightweight image so we keep it on small phones —
-     it's the visual anchor of the hero. Constrain to a poster-sized
-     portrait card so it doesn't dominate + doesn't leave dead space. */
   .hero{padding-top:88px; padding-bottom:48px}
   .hero-grid{gap:24px}
   .hero-canvas-wrap{
     height:auto;
     min-height:0;
-    aspect-ratio: 3 / 4;      /* matches the shelf image roughly */
-    max-width:280px;
+    aspect-ratio: 3 / 4;
+    max-width:320px;
     margin:0 auto;
-    filter:drop-shadow(0 18px 32px rgba(0,0,0,.28));
   }
-  .shelf-hero{ filter:none }  /* container handles the shadow now */
   .hero-copy{max-width:100%; display:flex; flex-direction:column; align-items:center; text-align:center}
   .hero-eyebrow{margin-bottom:20px}
   .hero-eyebrow::before{display:none}
@@ -1371,18 +1329,11 @@ p{text-wrap:pretty}
       </p>
       <div class="hero-ctas reveal" data-hero="ctas">
         <a href="#contact" class="btn btn-cobalt">Work With Us <span class="arrow">→</span></a>
-        <a href="#services" class="link-ghost">What We Do <span class="arrow">→</span></a>
+        <a href="#services" class="btn btn-ghost">What We Do <span class="arrow">→</span></a>
       </div>
     </div>
     <div class="hero-canvas-wrap">
-      <picture>
-        <source media="(max-width: 720px)" srcset="products/shelf-hero-small.jpg" />
-        <img class="shelf-hero" src="products/shelf-hero.jpg" alt="JBM client shelf — Tipson, Hellenic Treasures, SaMai, Forbes Candies" width="1744" height="2336" fetchpriority="high" />
-      </picture>
-      <!-- 3D shelf renders here on desktop; falls back to the img above on mobile / on load failure -->
       <canvas class="shelf-canvas" aria-hidden="true"></canvas>
-      <!-- SVG hit regions are injected by JS from products/shelf-catalog.json -->
-      <svg class="shelf-hits" viewBox="0 0 1744 2336" preserveAspectRatio="xMidYMid meet" aria-label="Click a product to see it up close"></svg>
     </div>
   </div>
   <div class="scroll-indicator" aria-hidden="true">
@@ -1897,105 +1848,6 @@ ScrollTrigger.create({
 });
 
 /* ============================================================
-   HERO SHELF — reference image + SVG hit regions + product lightbox
-   The shelf visual is a single high-res render. Each product is a
-   transparent SVG rect overlay that:
-     • hover  → shows brand + SKU tooltip
-     • click  → opens lightbox with a clean product image + copy
-   Catalog + region coords live in products/shelf-catalog.json.
-   ============================================================ */
-(async function initShelfHero(){
-  const svg = document.querySelector('.shelf-hits');
-  if(!svg) return;
-
-  let catalog;
-  try {
-    const res = await fetch('products/shelf-catalog.json', { cache:'no-cache' });
-    catalog = await res.json();
-  } catch (err) {
-    console.error('shelf-catalog.json failed to load', err);
-    return;
-  }
-
-  const tooltip = document.getElementById('product-tooltip');
-  const tipName = tooltip.querySelector('.product-tip-name');
-  const tipDesc = tooltip.querySelector('.product-tip-desc');
-
-  const lightbox = document.getElementById('productLightbox');
-  const lbImg    = lightbox.querySelector('.lightbox-image');
-  const lbBrand  = lightbox.querySelector('#lb-brand');
-  const lbSku    = lightbox.querySelector('#lb-sku');
-  const lbDesc   = lightbox.querySelector('#lb-desc');
-  const lbClose  = lightbox.querySelector('.lightbox-close');
-  const lbScrim  = lightbox.querySelector('.lightbox-scrim');
-
-  const SVG_NS  = 'http://www.w3.org/2000/svg';
-  const STRIP   = /\s*\(Facing\s*\d+\)\s*/i;
-
-  catalog.products.forEach((p) => {
-    const rect = document.createElementNS(SVG_NS, 'rect');
-    const [x, y, w, h] = p.region;
-    rect.setAttribute('x', x);
-    rect.setAttribute('y', y);
-    rect.setAttribute('width',  w);
-    rect.setAttribute('height', h);
-    rect.setAttribute('rx', 6);
-    rect.setAttribute('ry', 6);
-    rect.setAttribute('tabindex', 0);
-    rect.setAttribute('role', 'button');
-    rect.setAttribute('aria-label', `${p.brand} — ${p.sku}. Press Enter to open.`);
-    rect.dataset.slug = p.slug;
-    svg.appendChild(rect);
-
-    rect.addEventListener('mouseenter', () => {
-      tipName.textContent = `${p.brand} — ${p.sku.replace(STRIP, '')}`;
-      tipDesc.textContent = p.desc;
-      tooltip.classList.add('is-visible');
-    });
-    rect.addEventListener('mousemove', (e) => {
-      tooltip.style.left = e.clientX + 'px';
-      tooltip.style.top  = e.clientY + 'px';
-    });
-    rect.addEventListener('mouseleave', () => {
-      tooltip.classList.remove('is-visible');
-    });
-
-    const open = () => openLightbox(p);
-    rect.addEventListener('click', open);
-    rect.addEventListener('keydown', (e) => {
-      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); }
-    });
-  });
-
-  let lastFocused = null;
-  function openLightbox(p){
-    lastFocused = document.activeElement;
-    lbBrand.textContent = p.brand;
-    lbSku.textContent   = p.sku.replace(STRIP, '');
-    lbDesc.textContent  = p.desc;
-    lbImg.src           = `products/shelf-regions/${p.slug}.png`;
-    lbImg.alt           = `${p.brand} — ${p.sku}`;
-    lightbox.classList.add('is-open');
-    lightbox.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
-    requestAnimationFrame(() => lbClose.focus());
-  }
-
-  function closeLightbox(){
-    lightbox.classList.remove('is-open');
-    lightbox.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
-    if(lastFocused && lastFocused.focus) lastFocused.focus();
-  }
-
-  lbClose.addEventListener('click', closeLightbox);
-  lbScrim.addEventListener('click', closeLightbox);
-  document.addEventListener('keydown', (e) => {
-    if(e.key === 'Escape' && lightbox.classList.contains('is-open')) closeLightbox();
-  });
-})();
-
-/* ============================================================
    HERO ENTRANCE TIMELINE
    ============================================================ */
 const heroTL = gsap.timeline({ delay: reduceMotion ? 0 : 0.25 });
@@ -2032,20 +1884,15 @@ if(contactForm){
 </script>
 
 <!-- =========================================================
-     3D SHELF — GLB + parallax (desktop only)
-     Loads only above 640px. On mobile the flat img stays.
-     If Three.js or the GLB fails to load, the img is untouched
-     so the hero always has *something* visible.
+     3D SHELF — GLB + parallax. Runs on every breakpoint now
+     (mobile included). If Three.js or the GLB fails, the wrap
+     stays empty — no more 2D white-background poster.
      ========================================================= -->
 <script type="module">
-const MOBILE = window.matchMedia('(max-width: 640px)').matches;
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-if(!MOBILE){
-  init3DShelf().catch(err => {
-    // Any failure — Three.js CDN, GLB fetch, GLB parse — leaves the img visible.
-    console.warn('3D shelf failed to init; falling back to still image.', err);
-  });
-}
+init3DShelf().catch(err => {
+  console.warn('3D shelf failed to init.', err);
+});
 
 async function init3DShelf(){
   const [THREE, { GLTFLoader }] = await Promise.all([
@@ -2053,10 +1900,9 @@ async function init3DShelf(){
     import('three/addons/loaders/GLTFLoader.js'),
   ]);
 
-  const canvas   = document.querySelector('.shelf-canvas');
-  const imgFall  = document.querySelector('.shelf-hero');
-  const wrap     = canvas.parentElement;
+  const canvas = document.querySelector('.shelf-canvas');
   if(!canvas) return;
+  const wrap   = canvas.parentElement;
 
   // ── renderer ────────────────────────────────────────────────
   const renderer = new THREE.WebGLRenderer({
@@ -2196,7 +2042,6 @@ async function init3DShelf(){
   // Two-frame wait so the first render lands before we fade in
   requestAnimationFrame(() => requestAnimationFrame(() => {
     canvas.classList.add('is-visible');
-    if(imgFall) imgFall.classList.add('is-hidden');
   }));
 }
 </script>
