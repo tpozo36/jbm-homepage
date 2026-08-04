@@ -386,11 +386,7 @@ p{text-wrap:pretty}
 .shelf-hits rect{
   fill:transparent;
   pointer-events:all;
-  cursor:pointer;
-}
-.shelf-hits rect:focus-visible{
-  outline:2px solid var(--paper);
-  outline-offset:-2px;
+  cursor:default;
 }
 
 /* ============================================================
@@ -1700,26 +1696,6 @@ p{text-wrap:pretty}
   <span class="product-tip-desc"></span>
 </div>
 
-<!-- Product lightbox — opens when a shelf product is clicked -->
-<div class="product-lightbox" id="productLightbox" role="dialog" aria-modal="true" aria-labelledby="lb-sku" aria-hidden="true">
-  <button class="lightbox-scrim" type="button" aria-label="Close product view"></button>
-  <div class="lightbox-card">
-    <button class="lightbox-close" type="button" aria-label="Close">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M3 3L13 13M13 3L3 13" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
-      </svg>
-    </button>
-    <div class="lightbox-image-wrap">
-      <img class="lightbox-image" src="" alt="" />
-    </div>
-    <div class="lightbox-copy">
-      <div class="lightbox-brand" id="lb-brand"></div>
-      <h3 class="lightbox-sku" id="lb-sku"></h3>
-      <p class="lightbox-desc" id="lb-desc"></p>
-    </div>
-  </div>
-</div>
-
 
 <!-- =========================================================
      LIBS
@@ -1903,9 +1879,10 @@ ScrollTrigger.create({
 });
 
 /* ============================================================
-   HERO SHELF INTERACTION — invisible SVG hit regions layered on
-   top of the 3D shelf. Hover shows tooltip; click opens lightbox.
-   No visible highlight per client request.
+   HERO SHELF HOVER — invisible SVG hit regions over the 3D shelf.
+   Hover a region → tooltip appears with brand/SKU. Nothing more:
+   the click-to-lightbox path was removed because the cropped
+   reference photos read as low-fidelity next to the 3D scene.
    Region coords are pinned to the 2D reference-image layout, so
    may not perfectly track the 3D geometry (known trade-off).
    ============================================================ */
@@ -1926,14 +1903,6 @@ ScrollTrigger.create({
   const tipName = tooltip.querySelector('.product-tip-name');
   const tipDesc = tooltip.querySelector('.product-tip-desc');
 
-  const lightbox = document.getElementById('productLightbox');
-  const lbImg    = lightbox.querySelector('.lightbox-image');
-  const lbBrand  = lightbox.querySelector('#lb-brand');
-  const lbSku    = lightbox.querySelector('#lb-sku');
-  const lbDesc   = lightbox.querySelector('#lb-desc');
-  const lbClose  = lightbox.querySelector('.lightbox-close');
-  const lbScrim  = lightbox.querySelector('.lightbox-scrim');
-
   const SVG_NS = 'http://www.w3.org/2000/svg';
   const STRIP  = /\s*\(Facing\s*\d+\)\s*/i;
 
@@ -1944,9 +1913,6 @@ ScrollTrigger.create({
     rect.setAttribute('y', y);
     rect.setAttribute('width',  w);
     rect.setAttribute('height', h);
-    rect.setAttribute('tabindex', 0);
-    rect.setAttribute('role', 'button');
-    rect.setAttribute('aria-label', `${p.brand} — ${p.sku}. Press Enter to open.`);
     rect.dataset.slug = p.slug;
     svg.appendChild(rect);
 
@@ -1962,39 +1928,6 @@ ScrollTrigger.create({
     rect.addEventListener('mouseleave', () => {
       tooltip.classList.remove('is-visible');
     });
-
-    const open = () => openLightbox(p);
-    rect.addEventListener('click', open);
-    rect.addEventListener('keydown', (e) => {
-      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); }
-    });
-  });
-
-  let lastFocused = null;
-  function openLightbox(p){
-    lastFocused = document.activeElement;
-    lbBrand.textContent = p.brand;
-    lbSku.textContent   = p.sku.replace(STRIP, '');
-    lbDesc.textContent  = p.desc;
-    lbImg.src           = `products/shelf-regions/${p.slug}.png`;
-    lbImg.alt           = `${p.brand} — ${p.sku}`;
-    lightbox.classList.add('is-open');
-    lightbox.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
-    requestAnimationFrame(() => lbClose.focus());
-  }
-
-  function closeLightbox(){
-    lightbox.classList.remove('is-open');
-    lightbox.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
-    if(lastFocused && lastFocused.focus) lastFocused.focus();
-  }
-
-  lbClose.addEventListener('click', closeLightbox);
-  lbScrim.addEventListener('click', closeLightbox);
-  document.addEventListener('keydown', (e) => {
-    if(e.key === 'Escape' && lightbox.classList.contains('is-open')) closeLightbox();
   });
 })();
 
@@ -2198,19 +2131,23 @@ async function init3DShelf(){
   const clock = new THREE.Clock();
   function tick(){
     const dt = Math.min(clock.getDelta(), 0.05);
-    // Frame-rate-independent smoothing
+    const t  = clock.elapsedTime;
+    // Frame-rate-independent smoothing toward the target vector
     const lerp = 1 - Math.exp(-4 * dt);
     mouse.x += (mouse.tx - mouse.x) * lerp;
     mouse.y += (mouse.ty - mouse.y) * lerp;
 
     if(!REDUCED_MOTION){
-      // Sway toward the cursor — bigger yaw than pitch so it reads as "looking
-      // around" the shelf, not tilting a physical object.
-      shelfRoot.rotation.y = mouse.x * 0.22;   // ~12° left/right
-      shelfRoot.rotation.x = -mouse.y * 0.09;  // ~5° up/down
+      // Idle sway is always running — the shelf breathes on its own so
+      // it looks alive from the moment it loads, without waiting for a
+      // cursor or device-orientation event. Cursor / tilt input adds on
+      // top of the idle motion.
+      const idleYaw   = Math.sin(t * 0.45) * 0.10;   // ~5.7° slow left/right
+      const idlePitch = Math.sin(t * 0.31) * 0.035;  // ~2° slow up/down
+      shelfRoot.rotation.y = idleYaw   + mouse.x * 0.18;
+      shelfRoot.rotation.x = idlePitch - mouse.y * 0.08;
       // Camera creeps in slightly on scroll (parallax push)
       camera.position.z = camBase.z - scrollProgress * 0.8;
-      // Slight lift as user scrolls the hero
       camera.position.y = -scrollProgress * 0.15;
     }
     camera.lookAt(0, 0, 0);
