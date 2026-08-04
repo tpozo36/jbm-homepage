@@ -344,6 +344,22 @@ p{text-wrap:pretty}
   object-position:center;
   display:block;
   filter:drop-shadow(0 24px 40px rgba(0,0,0,.22));
+  transition:opacity .4s var(--ease-out);
+}
+/* When the 3D scene loads, fade the still image out — canvas takes over */
+.shelf-hero.is-hidden{ opacity:0 }
+.shelf-canvas{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  display:block;
+  opacity:0;
+  transition:opacity .5s var(--ease-out);
+  pointer-events:none;   /* SVG on top receives all input */
+}
+.shelf-canvas.is-visible{ opacity:1 }
+/* Mobile: never show canvas — keep the flat img for perf */
+@media (max-width: 640px){
+  .shelf-canvas{ display:none }
 }
 .shelf-hits{
   position:absolute; inset:0;
@@ -1329,6 +1345,8 @@ p{text-wrap:pretty}
         <source media="(max-width: 720px)" srcset="products/shelf-hero-small.jpg" />
         <img class="shelf-hero" src="products/shelf-hero.jpg" alt="JBM client shelf — Tipson, Hellenic Treasures, SaMai, Forbes Candies" width="1744" height="2336" fetchpriority="high" />
       </picture>
+      <!-- 3D shelf renders here on desktop; falls back to the img above on mobile / on load failure -->
+      <canvas class="shelf-canvas" aria-hidden="true"></canvas>
       <!-- SVG hit regions are injected by JS from products/shelf-catalog.json -->
       <svg class="shelf-hits" viewBox="0 0 1744 2336" preserveAspectRatio="xMidYMid meet" aria-label="Click a product to see it up close"></svg>
     </div>
@@ -1662,6 +1680,15 @@ p{text-wrap:pretty}
      ========================================================= -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<!-- Three.js only loads when hero-canvas-wrap is >640px; see HERO SHELF init -->
+<script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.164.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.0/examples/jsm/"
+    }
+  }
+</script>
 
 <script>
 /* ============================================================
@@ -1967,6 +1994,164 @@ if(contactForm){
     // Keep the newly-revealed success message in view on small screens
     contactForm.scrollIntoView({ behavior:'smooth', block:'nearest' });
   });
+}
+</script>
+
+<!-- =========================================================
+     3D SHELF — GLB + parallax (desktop only)
+     Loads only above 640px. On mobile the flat img stays.
+     If Three.js or the GLB fails to load, the img is untouched
+     so the hero always has *something* visible.
+     ========================================================= -->
+<script type="module">
+const MOBILE = window.matchMedia('(max-width: 640px)').matches;
+const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+if(!MOBILE){
+  init3DShelf().catch(err => {
+    // Any failure — Three.js CDN, GLB fetch, GLB parse — leaves the img visible.
+    console.warn('3D shelf failed to init; falling back to still image.', err);
+  });
+}
+
+async function init3DShelf(){
+  const [THREE, { GLTFLoader }] = await Promise.all([
+    import('three'),
+    import('three/addons/loaders/GLTFLoader.js'),
+  ]);
+
+  const canvas   = document.querySelector('.shelf-canvas');
+  const imgFall  = document.querySelector('.shelf-hero');
+  const wrap     = canvas.parentElement;
+  if(!canvas) return;
+
+  // ── renderer ────────────────────────────────────────────────
+  const renderer = new THREE.WebGLRenderer({
+    canvas, antialias:true, alpha:true,
+    powerPreference:'high-performance',
+  });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+  renderer.setClearColor(0x000000, 0);
+
+  const scene = new THREE.Scene();
+
+  // ── camera ──────────────────────────────────────────────────
+  // Portrait framing to match the reference render.
+  const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 100);
+  const camBase = new THREE.Vector3(0, 0, 4);
+  camera.position.copy(camBase);
+  camera.lookAt(0, 0, 0);
+
+  // ── lights ──────────────────────────────────────────────────
+  scene.add(new THREE.AmbientLight(0xF0ECE4, 0.75));
+  const key = new THREE.DirectionalLight(0xFFF3D8, 1.1);
+  key.position.set(-3, 5, 6);
+  scene.add(key);
+  const fill = new THREE.DirectionalLight(0xE4EAFF, 0.35);
+  fill.position.set(4, 2, 4);
+  scene.add(fill);
+
+  // ── load GLB ────────────────────────────────────────────────
+  const loader = new GLTFLoader();
+  const gltf = await new Promise((resolve, reject) => {
+    loader.load('products/shelf.glb', resolve, undefined, reject);
+  });
+
+  const shelfRoot = new THREE.Group();
+  shelfRoot.add(gltf.scene);
+  scene.add(shelfRoot);
+
+  // Compute bounding box → center + scale the model into view
+  const box = new THREE.Box3().setFromObject(gltf.scene);
+  const size = new THREE.Vector3(); box.getSize(size);
+  const center = new THREE.Vector3(); box.getCenter(center);
+  gltf.scene.position.sub(center);   // center the model on origin
+  // Normalize height to 3.0 world units so camera framing is stable
+  const targetHeight = 3.0;
+  const scale = targetHeight / size.y;
+  gltf.scene.scale.setScalar(scale);
+
+  // Improve texture filtering
+  gltf.scene.traverse((obj) => {
+    if(obj.isMesh && obj.material && obj.material.map){
+      obj.material.map.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      obj.material.side = THREE.DoubleSide;
+    }
+  });
+
+  // ── responsive size ─────────────────────────────────────────
+  function resize(){
+    const w = wrap.clientWidth;
+    const h = wrap.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    // Zoom (dolly) based on aspect so the shelf always fills a similar
+    // portion of the viewport (portrait shelf in a landscape wrap → move back).
+    const shelfAspect = 1744 / 2336; // reference aspect
+    const wrapAspect  = w / h;
+    // If viewport is wider than shelf aspect, we need to move back to keep
+    // the shelf's height visible. If narrower, move closer to fill width.
+    const distance = wrapAspect >= shelfAspect
+      ? 4.0 * (shelfAspect / Math.min(wrapAspect, 0.85))
+      : 4.0 * (shelfAspect / wrapAspect);
+    camBase.z = Math.max(3.6, Math.min(6.5, distance));
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  window.addEventListener('resize', resize, { passive: true });
+
+  // ── mouse parallax + scroll push ────────────────────────────
+  const mouse = { x:0, y:0, tx:0, ty:0 };
+  window.addEventListener('mousemove', (e) => {
+    mouse.tx = (e.clientX / window.innerWidth)  * 2 - 1;
+    mouse.ty = (e.clientY / window.innerHeight) * 2 - 1;
+  }, { passive: true });
+
+  let scrollProgress = 0;
+  if(typeof ScrollTrigger !== 'undefined'){
+    const heroEl = document.querySelector('.hero');
+    ScrollTrigger.create({
+      trigger: heroEl,
+      start: 'top top',
+      end: 'bottom top',
+      scrub: 0.6,
+      onUpdate: (self) => { scrollProgress = self.progress; }
+    });
+  }
+
+  // ── animation loop ──────────────────────────────────────────
+  const clock = new THREE.Clock();
+  function tick(){
+    const dt = Math.min(clock.getDelta(), 0.05);
+    // Frame-rate-independent smoothing
+    const lerp = 1 - Math.exp(-4 * dt);
+    mouse.x += (mouse.tx - mouse.x) * lerp;
+    mouse.y += (mouse.ty - mouse.y) * lerp;
+
+    if(!REDUCED_MOTION){
+      // Subtle model tilt from mouse — reads as depth, not chaos
+      shelfRoot.rotation.y = mouse.x * 0.06;
+      shelfRoot.rotation.x = -mouse.y * 0.03;
+      // Camera creeps in slightly on scroll (parallax push)
+      camera.position.z = camBase.z - scrollProgress * 0.8;
+      // Slight lift as user scrolls the hero
+      camera.position.y = -scrollProgress * 0.15;
+    }
+    camera.lookAt(0, 0, 0);
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(tick);
+  }
+  tick();
+
+  // ── reveal ──────────────────────────────────────────────────
+  // Two-frame wait so the first render lands before we fade in
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    canvas.classList.add('is-visible');
+    if(imgFall) imgFall.classList.add('is-hidden');
+  }));
 }
 </script>
 </body>
