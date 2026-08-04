@@ -2087,7 +2087,7 @@ async function init3DShelf(){
   const boundingSphere = new THREE.Sphere();
   new THREE.Box3().setFromObject(gltf.scene).getBoundingSphere(boundingSphere);
   const R = boundingSphere.radius;
-  const PADDING = 1.25;
+  const PADDING = 1.02;   // tight framing — shelf almost fills the box
 
   function resize(){
     const w = wrap.clientWidth;
@@ -2106,12 +2106,19 @@ async function init3DShelf(){
   resize();
   window.addEventListener('resize', resize, { passive: true });
 
-  // ── mouse parallax + scroll push ────────────────────────────
+  // ── mouse sway (tracks cursor over the shelf area) + scroll push ──
+  // Sway is driven by cursor position relative to the wrap so the shelf
+  // "follows" the pointer. Returns to center when the cursor leaves.
   const mouse = { x:0, y:0, tx:0, ty:0 };
-  window.addEventListener('mousemove', (e) => {
-    mouse.tx = (e.clientX / window.innerWidth)  * 2 - 1;
-    mouse.ty = (e.clientY / window.innerHeight) * 2 - 1;
+  wrap.addEventListener('mousemove', (e) => {
+    const rect = wrap.getBoundingClientRect();
+    mouse.tx = ((e.clientX - rect.left) / rect.width)  * 2 - 1;
+    mouse.ty = ((e.clientY - rect.top)  / rect.height) * 2 - 1;
   }, { passive: true });
+  wrap.addEventListener('mouseleave', () => {
+    // Ease back to neutral when the user leaves the shelf
+    mouse.tx = 0; mouse.ty = 0;
+  });
 
   let scrollProgress = 0;
   if(typeof ScrollTrigger !== 'undefined'){
@@ -2135,9 +2142,10 @@ async function init3DShelf(){
     mouse.y += (mouse.ty - mouse.y) * lerp;
 
     if(!REDUCED_MOTION){
-      // Subtle model tilt from mouse — reads as depth, not chaos
-      shelfRoot.rotation.y = mouse.x * 0.06;
-      shelfRoot.rotation.x = -mouse.y * 0.03;
+      // Sway toward the cursor — bigger yaw than pitch so it reads as "looking
+      // around" the shelf, not tilting a physical object.
+      shelfRoot.rotation.y = mouse.x * 0.22;   // ~12° left/right
+      shelfRoot.rotation.x = -mouse.y * 0.09;  // ~5° up/down
       // Camera creeps in slightly on scroll (parallax push)
       camera.position.z = camBase.z - scrollProgress * 0.8;
       // Slight lift as user scrolls the hero
