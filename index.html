@@ -335,11 +335,163 @@ p{text-wrap:pretty}
   position:relative;
   height:min(78vh, 720px);
   min-height:520px;
+  display:flex; align-items:center; justify-content:center;
 }
-#hero-canvas{
+.shelf-hero{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  object-fit:contain;
+  object-position:center;
+  display:block;
+  filter:drop-shadow(0 24px 40px rgba(0,0,0,.22));
+  transition:opacity .4s var(--ease-out);
+}
+/* When the 3D scene loads, fade the still image out — canvas takes over */
+.shelf-hero.is-hidden{ opacity:0 }
+.shelf-canvas{
   position:absolute; inset:0;
   width:100%; height:100%;
   display:block;
+  opacity:0;
+  transition:opacity .5s var(--ease-out);
+  pointer-events:none;   /* SVG on top receives all input */
+}
+.shelf-canvas.is-visible{ opacity:1 }
+/* Mobile: never show canvas — keep the flat img for perf */
+@media (max-width: 640px){
+  .shelf-canvas{ display:none }
+}
+.shelf-hits{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  pointer-events:none;   /* svg container passes through; only rects catch clicks */
+  overflow:visible;
+}
+.shelf-hits rect{
+  fill:rgba(30,79,216,0);
+  pointer-events:all;
+  cursor:pointer;
+  transition:fill .18s var(--ease-out);
+  rx:6; ry:6;
+}
+@media (hover:hover){
+  .shelf-hits rect:hover{ fill:rgba(30,79,216,.12) }
+}
+.shelf-hits rect:focus-visible{
+  fill:rgba(30,79,216,.16);
+  outline:2px solid var(--paper);
+  outline-offset:-2px;
+}
+
+/* ============================================================
+   PRODUCT LIGHTBOX — click a shelf product to see it up close
+   ============================================================ */
+.product-lightbox{
+  position:fixed; inset:0; z-index:100;
+  display:flex; align-items:center; justify-content:center;
+  padding:24px;
+  opacity:0; visibility:hidden;
+  transition:opacity .3s var(--ease-out), visibility 0s linear .3s;
+}
+.product-lightbox.is-open{
+  opacity:1; visibility:visible;
+  transition:opacity .3s var(--ease-out), visibility 0s linear 0s;
+}
+.lightbox-scrim{
+  position:absolute; inset:0;
+  background:rgba(20,20,20,.55);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  border:0; padding:0; cursor:pointer;
+}
+.lightbox-card{
+  position:relative; z-index:2;
+  background:var(--paper);
+  border-radius:8px;
+  max-width:820px;
+  width:100%;
+  max-height:88vh;
+  display:grid;
+  grid-template-columns:0.9fr 1.1fr;
+  gap:0;
+  box-shadow:0 40px 80px -20px rgba(0,0,0,.4), 0 12px 32px -12px rgba(0,0,0,.25);
+  overflow:hidden;
+  transform:scale(.96) translateY(8px);
+  transition:transform .32s var(--ease-out);
+}
+.product-lightbox.is-open .lightbox-card{
+  transform:scale(1) translateY(0);
+}
+.lightbox-image-wrap{
+  display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(180deg, #FAF6EE 0%, #F0ECE4 100%);
+  padding:36px;
+  min-height:240px;
+}
+.lightbox-image{
+  max-width:100%;
+  max-height:100%;
+  width:auto; height:auto;
+  object-fit:contain;
+  display:block;
+}
+.lightbox-copy{
+  display:flex; flex-direction:column; justify-content:center;
+  padding:44px 40px 40px;
+}
+.lightbox-brand{
+  font-size:11px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--cobalt);
+  font-weight:600;
+  margin-bottom:14px;
+  display:inline-flex; align-items:center; gap:10px;
+}
+.lightbox-brand::before{
+  content:""; width:28px; height:1px; background:var(--cobalt);
+}
+.lightbox-sku{
+  font-family:var(--serif);
+  font-weight:700;
+  font-size:clamp(24px, 2.6vw, 32px);
+  letter-spacing:-.015em;
+  line-height:1.15;
+  margin:0 0 16px;
+  color:var(--ink);
+}
+.lightbox-desc{
+  color:var(--mid);
+  font-size:15.5px;
+  line-height:1.7;
+  margin:0;
+}
+.lightbox-close{
+  position:absolute; top:14px; right:14px; z-index:3;
+  width:36px; height:36px;
+  border-radius:50%;
+  background:rgba(20,20,20,.06);
+  color:var(--ink);
+  display:flex; align-items:center; justify-content:center;
+  transition:background .18s var(--ease-out);
+}
+@media (hover:hover){
+  .lightbox-close:hover{ background:rgba(20,20,20,.14) }
+}
+.lightbox-close svg{ display:block }
+@media (max-width: 720px){
+  .lightbox-card{
+    grid-template-columns:1fr;
+    max-height:92vh;
+  }
+  .lightbox-image-wrap{
+    padding:28px 28px 20px;
+    min-height:200px;
+    max-height:44vh;
+  }
+  .lightbox-copy{
+    padding:24px 24px 32px;
+  }
 }
 
 /* Scroll indicator */
@@ -374,6 +526,25 @@ p{text-wrap:pretty}
   .hero-copy{order:2}
   .hero-canvas-wrap{order:1; height:min(52vh, 460px); min-height:380px}
   .scroll-indicator{display:none}
+}
+@media (max-width: 640px){
+  .hero{padding-top:104px; padding-bottom:72px}
+  .hero-canvas-wrap{height:min(44vh, 360px); min-height:300px}
+  .hero h1{font-size:clamp(44px, 11vw, 64px); margin-bottom:24px}
+  .hero-eyebrow{margin-bottom:24px}
+  .hero-sub{margin-bottom:32px}
+}
+@media (max-width: 479px){
+  /* Shelf is now a lightweight image so we keep it on small phones —
+     it's the visual anchor of the hero. Just shrink its footprint. */
+  .hero{padding-top:96px; padding-bottom:56px}
+  .hero-grid{gap:28px}
+  .hero-canvas-wrap{height:min(58vw, 380px); min-height:280px}
+  .hero-copy{max-width:100%; display:flex; flex-direction:column; align-items:center; text-align:center}
+  .hero-eyebrow::before{display:none}
+  .hero-sub{margin-left:auto; margin-right:auto}
+  .hero-ctas{justify-content:center; width:100%}
+  .hero-ctas .btn{flex:1 1 auto; justify-content:center; min-height:52px}
 }
 
 /* ============================================================
@@ -744,8 +915,7 @@ p{text-wrap:pretty}
 .cta-strip{
   background:var(--cobalt);
   color:var(--paper);
-  padding:clamp(96px, 12vw, 160px) 0;
-  text-align:center;
+  padding:clamp(88px, 10vw, 140px) 0;
   position:relative;
   overflow:hidden;
 }
@@ -756,23 +926,202 @@ p{text-wrap:pretty}
   background:radial-gradient(80% 100% at 50% 0%, rgba(255,255,255,.08), transparent 60%);
   pointer-events:none;
 }
-.cta-strip .inner{position:relative; z-index:2; max-width:820px; margin:0 auto}
-.cta-strip h2{
+.cta-strip .contact-grid{
+  position:relative; z-index:2;
+  display:grid;
+  grid-template-columns: 1fr 1.05fr;
+  gap: clamp(56px, 6vw, 96px);
+  align-items:center;
+}
+@media (max-width: 900px){
+  .cta-strip .contact-grid{ grid-template-columns: 1fr; gap: 56px; }
+}
+.cta-strip .contact-copy h2{
   font-family:var(--serif);
   font-weight:700;
-  font-size:clamp(42px, 6.6vw, 88px);
+  font-size:clamp(40px, 5.4vw, 76px);
   line-height:1.02;
   letter-spacing:-.025em;
-  margin:0 0 24px;
+  margin:0 0 22px;
   color:var(--paper);
 }
-.cta-strip h2 em{font-style:italic; font-weight:600}
-.cta-strip p{
+.cta-strip .contact-copy h2 em{font-style:italic; font-weight:600}
+.cta-strip .contact-copy .lede{
   font-size:18px;
   color:rgba(240,236,228,.85);
   max-width:44ch;
-  margin:0 auto 42px;
-  line-height:1.7;
+  margin:0 0 40px;
+  line-height:1.65;
+}
+.cta-strip .contact-stats{
+  display:grid;
+  grid-template-columns: repeat(3, auto);
+  gap: 36px;
+  border-top: 1px solid rgba(240,236,228,.18);
+  padding-top: 28px;
+  max-width: 480px;
+}
+.cta-strip .stat-num{
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: clamp(30px, 3.4vw, 44px);
+  color: var(--paper);
+  line-height: 1;
+  letter-spacing: -.02em;
+  margin-bottom: 8px;
+}
+.cta-strip .stat-label{
+  font-size: 11px;
+  color: rgba(240,236,228,.68);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  line-height: 1.35;
+}
+
+/* Contact form card — paper on cobalt, cobalt focus rings */
+.contact-form{
+  background: var(--paper);
+  color: var(--ink);
+  padding: clamp(28px, 3.4vw, 40px);
+  border-radius: 4px;
+  box-shadow: 0 30px 60px -20px rgba(0,0,0,.35), 0 12px 24px -12px rgba(0,0,0,.22);
+  display: grid;
+  gap: 16px;
+  position: relative;
+}
+.contact-form h3{
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 26px;
+  letter-spacing: -.01em;
+  margin: 0;
+  line-height: 1.15;
+}
+.contact-form .form-fields > .lede{
+  font-size: 14px;
+  color: rgba(20,20,20,.6);
+  margin: -8px 0 6px;
+}
+.contact-form .row{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 520px){
+  .contact-form .row{ grid-template-columns: 1fr; }
+}
+.contact-form label{
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(20,20,20,.55);
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+.contact-form .field{
+  display: block;
+  width: 100%;
+  background: #FAF6EE;
+  border: 1px solid rgba(20,20,20,.10);
+  border-radius: 3px;
+  padding: 12px 14px;
+  font: inherit;
+  color: var(--ink);
+  font-size: 15px;
+  transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+.contact-form .field::placeholder{ color: rgba(20,20,20,.35); }
+.contact-form .field:focus{
+  outline: none;
+  border-color: var(--cobalt);
+  background: #FFFDF6;
+  box-shadow: 0 0 0 3px rgba(30,79,216,.14);
+}
+.contact-form textarea.field{
+  resize: vertical;
+  min-height: 108px;
+  line-height: 1.55;
+  font-family: inherit;
+}
+.contact-form select.field{
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' fill='none' stroke='%23141414' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 34px;
+}
+.contact-form .submit{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 24px;
+  background: var(--cobalt);
+  color: var(--paper);
+  border: 0;
+  border-radius: 3px;
+  font: inherit;
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: .02em;
+  cursor: pointer;
+  transition: background .18s ease, transform .18s ease;
+  margin-top: 4px;
+  font-family: inherit;
+}
+@media (hover:hover){
+  .contact-form .submit:hover{
+    background: var(--cobalt-hover);
+    transform: translateY(-1px);
+  }
+  .contact-form .submit:hover .arrow{ transform: translateX(3px); }
+}
+.contact-form .submit:focus-visible{
+  outline: 2px solid var(--paper);
+  outline-offset: 3px;
+}
+.contact-form .submit .arrow{
+  display: inline-block;
+  transition: transform .2s ease;
+}
+
+.contact-form.is-sent .form-fields{ display: none; }
+.contact-form .form-success{
+  display: none;
+  padding: 32px 8px 20px;
+  text-align: center;
+}
+.contact-form.is-sent .form-success{
+  display: block;
+  animation: successFade .45s ease-out both;
+}
+.contact-form .form-success h3{
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+.contact-form .form-success p{
+  color: rgba(20,20,20,.6);
+  font-size: 14px;
+  margin: 0 auto;
+  max-width: 32ch;
+  line-height: 1.55;
+}
+.contact-form .form-success .checkmark{
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(30,79,216,.10);
+  color: var(--cobalt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px;
+}
+@keyframes successFade{
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ============================================================
@@ -906,6 +1255,49 @@ p{text-wrap:pretty}
   /* Keep image hidden under reduced motion (no reveal transition) */
   .cat-image-wrap{transform:translateY(100%) !important}
 }
+
+/* ============================================================
+   MOBILE POLISH — small-screen tightening
+   Section paddings + typography + form/touch targets for phones.
+   ============================================================ */
+@media (max-width: 640px){
+  :root{
+    /* clamp min was 96px; way too much whitespace between sections on a phone */
+    --section-y: 72px;
+  }
+  /* Section heads have their own top-of-section margin; reduce */
+  .services-head, .categories-head, .philosophy-head{
+    margin-bottom:clamp(36px, 8vw, 56px);
+  }
+  /* Contact form fields — bump touch height, cushion spacing */
+  .contact-form .field{ padding:14px 14px; font-size:16px } /* 16px avoids iOS zoom on focus */
+  .contact-form .submit{ min-height:52px; padding:14px 22px }
+  .contact-form .contact-stats{
+    grid-template-columns:repeat(3, 1fr);
+    gap:16px;
+  }
+  .cta-strip .stat-num{ font-size:clamp(26px, 8vw, 34px) }
+  /* Marquee row typography */
+  .brand-pill{ font-size:15px; padding:9px 16px }
+  /* Heritage year monogram — narrow phones can crush the stroke */
+  .big-year{ font-size:clamp(96px, 32vw, 160px) }
+}
+
+@media (max-width: 420px){
+  .shell{ padding-left:20px; padding-right:20px }
+  .services-grid{ gap:16px }
+  .service-card{ padding:26px 22px }
+  .service-card h3{ font-size:22px }
+  .service-card p{ font-size:15px; margin-bottom:20px }
+  .cta-strip .contact-copy h2{ font-size:clamp(34px, 10vw, 46px) }
+  .cta-strip .contact-copy .lede{ font-size:16px; margin-bottom:32px }
+  /* Give the contact form horizontal breathing room */
+  .contact-form{ padding:22px }
+  .contact-form h3{ font-size:22px }
+  /* Tighter hero CTAs — stack when very cramped */
+  .hero-ctas{ flex-direction:column; align-items:stretch; gap:12px }
+  .hero-ctas .btn{ width:100%; text-align:center; justify-content:center }
+}
 </style>
 </head>
 <body>
@@ -949,7 +1341,14 @@ p{text-wrap:pretty}
       </div>
     </div>
     <div class="hero-canvas-wrap">
-      <canvas id="hero-canvas" aria-hidden="true"></canvas>
+      <picture>
+        <source media="(max-width: 720px)" srcset="products/shelf-hero-small.jpg" />
+        <img class="shelf-hero" src="products/shelf-hero.jpg" alt="JBM client shelf — Tipson, Hellenic Treasures, SaMai, Forbes Candies" width="1744" height="2336" fetchpriority="high" />
+      </picture>
+      <!-- 3D shelf renders here on desktop; falls back to the img above on mobile / on load failure -->
+      <canvas class="shelf-canvas" aria-hidden="true"></canvas>
+      <!-- SVG hit regions are injected by JS from products/shelf-catalog.json -->
+      <svg class="shelf-hits" viewBox="0 0 1744 2336" preserveAspectRatio="xMidYMid meet" aria-label="Click a product to see it up close"></svg>
     </div>
   </div>
   <div class="scroll-indicator" aria-hidden="true">
@@ -1130,10 +1529,86 @@ p{text-wrap:pretty}
      CTA STRIP
      ========================================================= -->
 <section class="cta-strip" id="contact">
-  <div class="shell inner">
-    <h2 class="reveal">Ready to own more <em>shelf</em>?</h2>
-    <p class="reveal">Tell us about your brand. We'll take it from there.</p>
-    <a href="mailto:hello@jbmsales.com" class="btn btn-paper reveal">Get In Touch <span class="arrow">→</span></a>
+  <div class="shell">
+    <div class="contact-grid">
+      <div class="contact-copy">
+        <h2 class="reveal">Ready to own more <em>shelf</em>?</h2>
+        <p class="lede reveal">Tell us about your brand. If it's a fit, we'll put a plan together and get you in front of the buyers who matter.</p>
+
+        <div class="contact-stats reveal">
+          <div>
+            <div class="stat-num">50+</div>
+            <div class="stat-label">Years<br/>On Shelf</div>
+          </div>
+          <div>
+            <div class="stat-num">200+</div>
+            <div class="stat-label">Retail<br/>Partners</div>
+          </div>
+          <div>
+            <div class="stat-num">1976</div>
+            <div class="stat-label">Founded</div>
+          </div>
+        </div>
+      </div>
+
+      <form class="contact-form reveal" id="contactForm" novalidate>
+        <div class="form-fields">
+          <h3>Let's talk.</h3>
+          <p class="lede">We'll be in touch within 48 hours.</p>
+
+          <div class="row">
+            <div>
+              <label for="cf-name">Name</label>
+              <input class="field" type="text" id="cf-name" name="name" autocomplete="name" required />
+            </div>
+            <div>
+              <label for="cf-company">Company</label>
+              <input class="field" type="text" id="cf-company" name="company" autocomplete="organization" required />
+            </div>
+          </div>
+
+          <div class="row">
+            <div>
+              <label for="cf-email">Email</label>
+              <input class="field" type="email" id="cf-email" name="email" autocomplete="email" required />
+            </div>
+            <div>
+              <label for="cf-category">Category</label>
+              <select class="field" id="cf-category" name="category" required>
+                <option value="">Choose one</option>
+                <option>Food &amp; Beverage</option>
+                <option>Confections</option>
+                <option>Wellness &amp; Supplements</option>
+                <option>Housewares</option>
+                <option>Pet</option>
+                <option>Tech &amp; Electronics</option>
+                <option>Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label for="cf-message">Tell us about your brand</label>
+            <textarea class="field" id="cf-message" name="message" placeholder="What are you selling, where are you today, and where do you want to be?" required></textarea>
+          </div>
+
+          <button class="submit" type="submit">
+            Send it over
+            <span class="arrow" aria-hidden="true">→</span>
+          </button>
+        </div>
+
+        <div class="form-success" role="status" aria-live="polite">
+          <div class="checkmark" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 10.5L8 14.5L16 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h3>Message received.</h3>
+          <p>We read every one — expect a note back within 48 hours.</p>
+        </div>
+      </form>
+    </div>
   </div>
 </section>
 
@@ -1179,13 +1654,41 @@ p{text-wrap:pretty}
   <span class="product-tip-desc"></span>
 </div>
 
+<!-- Product lightbox — opens when a shelf product is clicked -->
+<div class="product-lightbox" id="productLightbox" role="dialog" aria-modal="true" aria-labelledby="lb-sku" aria-hidden="true">
+  <button class="lightbox-scrim" type="button" aria-label="Close product view"></button>
+  <div class="lightbox-card">
+    <button class="lightbox-close" type="button" aria-label="Close">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M3 3L13 13M13 3L3 13" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <div class="lightbox-image-wrap">
+      <img class="lightbox-image" src="" alt="" />
+    </div>
+    <div class="lightbox-copy">
+      <div class="lightbox-brand" id="lb-brand"></div>
+      <h3 class="lightbox-sku" id="lb-sku"></h3>
+      <p class="lightbox-desc" id="lb-desc"></p>
+    </div>
+  </div>
+</div>
+
 
 <!-- =========================================================
      LIBS
      ========================================================= -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<!-- Three.js only loads when hero-canvas-wrap is >640px; see HERO SHELF init -->
+<script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.164.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.0/examples/jsm/"
+    }
+  }
+</script>
 
 <script>
 /* ============================================================
@@ -1360,315 +1863,103 @@ ScrollTrigger.create({
 });
 
 /* ============================================================
-   THREE.JS — HERO SHELF
+   HERO SHELF — reference image + SVG hit regions + product lightbox
+   The shelf visual is a single high-res render. Each product is a
+   transparent SVG rect overlay that:
+     • hover  → shows brand + SKU tooltip
+     • click  → opens lightbox with a clean product image + copy
+   Catalog + region coords live in products/shelf-catalog.json.
    ============================================================ */
-const heroCanvas = document.getElementById('hero-canvas');
-let shelfState = null;
+(async function initShelfHero(){
+  const svg = document.querySelector('.shelf-hits');
+  if(!svg) return;
 
-function initShelf(){
-  const wrap = heroCanvas.parentElement;
-  let width = wrap.clientWidth;
-  let height = wrap.clientHeight;
-
-  const renderer = new THREE.WebGLRenderer({
-    canvas:heroCanvas,
-    antialias:true,
-    alpha:true,
-    precision:'highp',
-    powerPreference:'high-performance'
-  });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(width, height, false);
-  renderer.setClearColor(0x000000, 0);
-
-  const scene = new THREE.Scene();
-
-  const camera = new THREE.PerspectiveCamera(38, width/height, 0.1, 200);
-  const baseCam = new THREE.Vector3(-3.4, 2.4, 12);
-  camera.position.copy(baseCam);
-  camera.lookAt(0, 0.5, 0);
-
-  // Lights
-  const ambient = new THREE.AmbientLight(0xF0ECE4, 0.55);
-  scene.add(ambient);
-  const dir = new THREE.DirectionalLight(0x1E4FD8, 0.65);
-  dir.position.set(-6, 8, 6);
-  scene.add(dir);
-  const fill = new THREE.DirectionalLight(0xF0ECE4, 0.22);
-  fill.position.set(6, 4, 6);
-  scene.add(fill);
-
-  // Shelf group
-  const shelf = new THREE.Group();
-  scene.add(shelf);
-
-  const COBALT = 0x1E4FD8;
-  const PAPER  = 0xF0ECE4;
-
-  const SHELF_COUNT   = 5;
-  const SHELF_WIDTH   = 8.2;
-  const SHELF_DEPTH   = 2.4;
-  const SHELF_THICK   = 0.08;
-  const VERT_SPACING  = 1.55;
-  const TOTAL_HEIGHT  = (SHELF_COUNT - 1) * VERT_SPACING;
-
-  // Materials — LineBasicMaterial for edges (no z-fighting with fill meshes)
-  const structLineMat = new THREE.LineBasicMaterial({
-    color:COBALT, transparent:true, opacity:0.5
-  });
-  const backLineMat = new THREE.LineBasicMaterial({
-    color:COBALT, transparent:true, opacity:0.18
-  });
-  const productLineMat = new THREE.LineBasicMaterial({
-    color:COBALT, transparent:true, opacity:0.7
-  });
-
-  // Side supports (edges only)
-  const supportGeo = new THREE.BoxGeometry(0.10, TOTAL_HEIGHT + 0.4, SHELF_DEPTH);
-  const supportEdges = new THREE.EdgesGeometry(supportGeo);
-  const supportL = new THREE.LineSegments(supportEdges, structLineMat);
-  supportL.position.set(-SHELF_WIDTH/2 + 0.05, TOTAL_HEIGHT/2 - VERT_SPACING*((SHELF_COUNT-1)/2), 0);
-  const supportR = supportL.clone();
-  supportR.position.x = SHELF_WIDTH/2 - 0.05;
-  shelf.add(supportL, supportR);
-
-  // Back panel outline (subtle depth)
-  const backGeo = new THREE.BoxGeometry(SHELF_WIDTH, TOTAL_HEIGHT + 0.4, 0.02);
-  const backEdges = new THREE.EdgesGeometry(backGeo);
-  const back = new THREE.LineSegments(backEdges, backLineMat);
-  back.position.set(0, TOTAL_HEIGHT/2 - VERT_SPACING*((SHELF_COUNT-1)/2), -SHELF_DEPTH/2 + 0.01);
-  shelf.add(back);
-
-  // Product roster — 24 brands, one per shelf slot (6 per shelf × 4 shelves).
-  // PLACEHOLDER LIST: swap for JBM's real client brands.
-  const PRODUCTS = [
-    { name:"Annie's",           desc:"Organic mac & cheese, natural channel staple." },
-    { name:"Justin's",          desc:"Nut butter squeeze packs, impulse and center-store." },
-    { name:"Kind",              desc:"Nut and grain bars, wellness set." },
-    { name:"Rao's",             desc:"Premium jarred sauces, specialty grocery." },
-    { name:"Stonewall Kitchen", desc:"Specialty preserves and pantry, gift-set anchor." },
-    { name:"Sir Kensington's",  desc:"Better-for-you condiments, natural channel." },
-    { name:"Chosen Foods",      desc:"Avocado oil and clean dressings." },
-    { name:"Hu Chocolate",      desc:"Paleo dark chocolate, specialty confectionery." },
-    { name:"YumEarth",          desc:"Organic candy, natural confections set." },
-    { name:"SmartSweets",       desc:"Low-sugar candy, wellness confections." },
-    { name:"Enjoy Life",        desc:"Allergy-friendly baking and snacks." },
-    { name:"OXO",               desc:"Kitchen tools and gadgets, housewares mainstay." },
-    { name:"Lodge",             desc:"Cast iron cookware, hard goods." },
-    { name:"Stella & Chewy's",  desc:"Freeze-dried raw pet food, premium." },
-    { name:"Open Farm",         desc:"Traceable premium pet food." },
-    { name:"Anker",             desc:"Consumer electronics and charging." },
-    { name:"Hydro Flask",       desc:"Insulated drinkware, outdoor and lifestyle." },
-    { name:"Yeti",              desc:"Premium coolers and drinkware." },
-    { name:"Cotopaxi",          desc:"Outdoor apparel and gear." },
-    { name:"Olly",              desc:"Gummy vitamins and wellness." },
-    { name:"New Chapter",       desc:"Organic supplements, wellness set." },
-    { name:"Ritual",            desc:"Traceable multivitamins, direct-to-shelf." },
-    { name:"Garden of Life",    desc:"Organic supplements, natural channel leader." },
-    { name:"RxBar",             desc:"Whole-food protein bars." }
-  ];
-
-  // Shelves + products
-  const products = [];
-  const shelfBoards = [];
-  const hitMeshes = []; // separate array for raycaster targets
-
-  const boardGeo = new THREE.BoxGeometry(SHELF_WIDTH, SHELF_THICK, SHELF_DEPTH);
-  const boardEdges = new THREE.EdgesGeometry(boardGeo);
-  const hitMat = new THREE.MeshBasicMaterial({ visible:false });
-
-  let productIndex = 0;
-  for(let i = 0; i < SHELF_COUNT; i++){
-    const y = -TOTAL_HEIGHT/2 + i * VERT_SPACING;
-    const board = new THREE.LineSegments(boardEdges, structLineMat);
-    board.position.set(0, y, 0);
-    shelf.add(board);
-    shelfBoards.push(board);
-
-    if(i === SHELF_COUNT - 1) continue; // top board has no products above
-
-    const count = 6; // fixed — one per PRODUCTS entry (6 per shelf × 4 shelves = 24)
-    const usable = SHELF_WIDTH - 0.5;
-    const slot = usable / count;
-
-    for(let j = 0; j < count; j++){
-      const w = slot * (0.55 + Math.random() * 0.35);
-      const h = 0.55 + Math.random() * 0.85; // vary heights
-      const d = SHELF_DEPTH * (0.55 + Math.random() * 0.25);
-      const x = -usable/2 + slot * (j + 0.5) + (Math.random() - 0.5) * 0.05;
-      const finalY = y + SHELF_THICK/2 + h/2;
-
-      const geo = new THREE.BoxGeometry(w, h, d);
-      const edges = new THREE.EdgesGeometry(geo);
-      const wireMesh = new THREE.LineSegments(edges, productLineMat.clone());
-      const hitMesh = new THREE.Mesh(geo, hitMat); // invisible, for raycasting
-
-      const productGroup = new THREE.Group();
-      productGroup.add(wireMesh);
-      productGroup.add(hitMesh);
-      productGroup.position.set(x, y - 1.4, (Math.random() - 0.5) * 0.2);
-      productGroup.userData = {
-        finalY,
-        delay: products.length * 0.055,
-        brand: PRODUCTS[productIndex],
-        wireMesh,
-        baseColor: wireMesh.material.color.clone()
-      };
-      hitMesh.userData.productGroup = productGroup; // back-reference for raycast
-      shelf.add(productGroup);
-      products.push(productGroup);
-      hitMeshes.push(hitMesh);
-      productIndex++;
-    }
+  let catalog;
+  try {
+    const res = await fetch('products/shelf-catalog.json', { cache:'no-cache' });
+    catalog = await res.json();
+  } catch (err) {
+    console.error('shelf-catalog.json failed to load', err);
+    return;
   }
-
-  // Slightly recenter shelf vertically
-  shelf.position.y = 0.2;
-
-  // Stock animation — animate group position + wire opacity
-  products.forEach((p) => {
-    gsap.to(p.position, {
-      y: p.userData.finalY,
-      duration: 0.6,
-      delay: 0.35 + p.userData.delay,
-      ease: 'power3.out'
-    });
-    const wireMat = p.userData.wireMesh.material;
-    const startOpacity = wireMat.opacity;
-    wireMat.opacity = 0;
-    gsap.to(wireMat, {
-      opacity: startOpacity,
-      duration: 0.6,
-      delay: 0.35 + p.userData.delay,
-      ease: 'power2.out'
-    });
-  });
-
-  // ================================================================
-  // HOVER — raycaster + tooltip
-  // ================================================================
-  const raycaster = new THREE.Raycaster();
-  const pointer = new THREE.Vector2(-10, -10); // start off-screen
-  let pointerActive = false;
-  let hoveredProduct = null;
 
   const tooltip = document.getElementById('product-tooltip');
-  const tooltipName = tooltip.querySelector('.product-tip-name');
-  const tooltipDesc = tooltip.querySelector('.product-tip-desc');
-  const paperColor = new THREE.Color(PAPER);
+  const tipName = tooltip.querySelector('.product-tip-name');
+  const tipDesc = tooltip.querySelector('.product-tip-desc');
 
-  heroCanvas.addEventListener('pointermove', (e) => {
-    const rect = heroCanvas.getBoundingClientRect();
-    pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-    pointerActive = true;
-    tooltip.style.left = e.clientX + 'px';
-    tooltip.style.top = e.clientY + 'px';
+  const lightbox = document.getElementById('productLightbox');
+  const lbImg    = lightbox.querySelector('.lightbox-image');
+  const lbBrand  = lightbox.querySelector('#lb-brand');
+  const lbSku    = lightbox.querySelector('#lb-sku');
+  const lbDesc   = lightbox.querySelector('#lb-desc');
+  const lbClose  = lightbox.querySelector('.lightbox-close');
+  const lbScrim  = lightbox.querySelector('.lightbox-scrim');
+
+  const SVG_NS  = 'http://www.w3.org/2000/svg';
+  const STRIP   = /\s*\(Facing\s*\d+\)\s*/i;
+
+  catalog.products.forEach((p) => {
+    const rect = document.createElementNS(SVG_NS, 'rect');
+    const [x, y, w, h] = p.region;
+    rect.setAttribute('x', x);
+    rect.setAttribute('y', y);
+    rect.setAttribute('width',  w);
+    rect.setAttribute('height', h);
+    rect.setAttribute('rx', 6);
+    rect.setAttribute('ry', 6);
+    rect.setAttribute('tabindex', 0);
+    rect.setAttribute('role', 'button');
+    rect.setAttribute('aria-label', `${p.brand} — ${p.sku}. Press Enter to open.`);
+    rect.dataset.slug = p.slug;
+    svg.appendChild(rect);
+
+    rect.addEventListener('mouseenter', () => {
+      tipName.textContent = `${p.brand} — ${p.sku.replace(STRIP, '')}`;
+      tipDesc.textContent = p.desc;
+      tooltip.classList.add('is-visible');
+    });
+    rect.addEventListener('mousemove', (e) => {
+      tooltip.style.left = e.clientX + 'px';
+      tooltip.style.top  = e.clientY + 'px';
+    });
+    rect.addEventListener('mouseleave', () => {
+      tooltip.classList.remove('is-visible');
+    });
+
+    const open = () => openLightbox(p);
+    rect.addEventListener('click', open);
+    rect.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); }
+    });
   });
 
-  heroCanvas.addEventListener('pointerleave', () => {
-    pointerActive = false;
-    clearHover();
-  });
-
-  function clearHover(){
-    if(hoveredProduct){
-      const wire = hoveredProduct.userData.wireMesh;
-      const base = hoveredProduct.userData.baseColor;
-      gsap.to(wire.material.color, { r:base.r, g:base.g, b:base.b, duration:0.25 });
-      gsap.to(hoveredProduct.position, { y:hoveredProduct.userData.finalY, duration:0.3, ease:'power2.out' });
-      hoveredProduct = null;
-    }
-    tooltip.classList.remove('is-visible');
+  let lastFocused = null;
+  function openLightbox(p){
+    lastFocused = document.activeElement;
+    lbBrand.textContent = p.brand;
+    lbSku.textContent   = p.sku.replace(STRIP, '');
+    lbDesc.textContent  = p.desc;
+    lbImg.src           = `products/shelf-regions/${p.slug}.png`;
+    lbImg.alt           = `${p.brand} — ${p.sku}`;
+    lightbox.classList.add('is-open');
+    lightbox.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => lbClose.focus());
   }
 
-  function updateHover(){
-    if(!pointerActive) return;
-    raycaster.setFromCamera(pointer, camera);
-    const intersects = raycaster.intersectObjects(hitMeshes, false);
-    if(intersects.length > 0){
-      const productGroup = intersects[0].object.userData.productGroup;
-      if(hoveredProduct !== productGroup){
-        clearHover();
-        hoveredProduct = productGroup;
-        const wire = productGroup.userData.wireMesh;
-        gsap.to(wire.material.color, { r:paperColor.r, g:paperColor.g, b:paperColor.b, duration:0.2 });
-        gsap.to(productGroup.position, { y:productGroup.userData.finalY + 0.18, duration:0.28, ease:'power2.out' });
-        const brand = productGroup.userData.brand;
-        tooltipName.textContent = brand.name;
-        tooltipDesc.textContent = brand.desc;
-        tooltip.classList.add('is-visible');
-      }
-    } else if(hoveredProduct){
-      clearHover();
-    }
+  function closeLightbox(){
+    lightbox.classList.remove('is-open');
+    lightbox.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    if(lastFocused && lastFocused.focus) lastFocused.focus();
   }
 
-  // Mouse parallax
-  const mouse = { x:0, y:0, tx:0, ty:0 };
-  window.addEventListener('mousemove', (e) => {
-    mouse.tx = (e.clientX / window.innerWidth) * 2 - 1;
-    mouse.ty = (e.clientY / window.innerHeight) * 2 - 1;
+  lbClose.addEventListener('click', closeLightbox);
+  lbScrim.addEventListener('click', closeLightbox);
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape' && lightbox.classList.contains('is-open')) closeLightbox();
   });
-
-  // Scroll push (camera moves in as user scrolls the hero)
-  let scrollProgress = 0;
-  const heroEl = document.querySelector('.hero');
-  ScrollTrigger.create({
-    trigger: heroEl,
-    start: 'top top',
-    end: 'bottom top',
-    scrub: 0.6,
-    onUpdate: (self) => { scrollProgress = self.progress; }
-  });
-
-  // Resize
-  const resize = () => {
-    width = wrap.clientWidth;
-    height = wrap.clientHeight;
-    renderer.setSize(width, height, false);
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-  };
-  window.addEventListener('resize', resize);
-
-  // Loop
-  const clock = new THREE.Clock();
-  function tick(){
-    // Clamp dt: after tab blur, getDelta can return several seconds.
-    // Cap at 50ms (~20fps floor) so tab-refocus never causes a jump.
-    const dt = Math.min(clock.getDelta(), 0.05);
-
-    // Auto-rotation removed — GL_LINES shimmer on subpixel rotation,
-    // and mouse parallax + scroll push already give the 3D feel.
-
-    // Mouse parallax lerp — frame-rate-independent smoothing
-    // (behaves the same at 60Hz, 120Hz, or during frame drops)
-    const lerp = 1 - Math.exp(-3 * dt);
-    mouse.x += (mouse.tx - mouse.x) * lerp;
-    mouse.y += (mouse.ty - mouse.y) * lerp;
-
-    // Camera position: base + parallax + scroll push
-    const zPush = scrollProgress * 4.2; // moves closer as user scrolls
-    camera.position.x = baseCam.x + mouse.x * 0.45;
-    camera.position.y = baseCam.y + -mouse.y * 0.3;
-    camera.position.z = baseCam.z - zPush;
-    camera.lookAt(0, 0.5, 0);
-
-    updateHover(); // raycast + tooltip state
-
-    renderer.render(scene, camera);
-    requestAnimationFrame(tick);
-  }
-  tick();
-
-  shelfState = { renderer, scene, camera, shelf };
-}
-
-if(typeof THREE !== 'undefined'){
-  // wait for layout to settle
-  requestAnimationFrame(() => initShelf());
-}
+})();
 
 /* ============================================================
    HERO ENTRANCE TIMELINE
@@ -1684,6 +1975,196 @@ heroTL
 window.addEventListener('load', () => {
   ScrollTrigger.refresh();
 });
+
+/* ============================================================
+   CONTACT FORM — front-end only for now.
+   TODO: swap the submit body for a real endpoint (Formspree,
+   Basin, or a Vercel serverless function). Keep the success-state
+   swap so users still see confirmation.
+   ============================================================ */
+const contactForm = document.getElementById('contactForm');
+if(contactForm){
+  contactForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if(!contactForm.checkValidity()){
+      contactForm.reportValidity();
+      return;
+    }
+    contactForm.classList.add('is-sent');
+    // Keep the newly-revealed success message in view on small screens
+    contactForm.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  });
+}
+</script>
+
+<!-- =========================================================
+     3D SHELF — GLB + parallax (desktop only)
+     Loads only above 640px. On mobile the flat img stays.
+     If Three.js or the GLB fails to load, the img is untouched
+     so the hero always has *something* visible.
+     ========================================================= -->
+<script type="module">
+const MOBILE = window.matchMedia('(max-width: 640px)').matches;
+const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+if(!MOBILE){
+  init3DShelf().catch(err => {
+    // Any failure — Three.js CDN, GLB fetch, GLB parse — leaves the img visible.
+    console.warn('3D shelf failed to init; falling back to still image.', err);
+  });
+}
+
+async function init3DShelf(){
+  const [THREE, { GLTFLoader }] = await Promise.all([
+    import('three'),
+    import('three/addons/loaders/GLTFLoader.js'),
+  ]);
+
+  const canvas   = document.querySelector('.shelf-canvas');
+  const imgFall  = document.querySelector('.shelf-hero');
+  const wrap     = canvas.parentElement;
+  if(!canvas) return;
+
+  // ── renderer ────────────────────────────────────────────────
+  const renderer = new THREE.WebGLRenderer({
+    canvas, antialias:true, alpha:true,
+    powerPreference:'high-performance',
+  });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+  renderer.setClearColor(0x000000, 0);
+
+  const scene = new THREE.Scene();
+
+  // ── camera ──────────────────────────────────────────────────
+  // Portrait framing to match the reference render.
+  const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
+  const camBase = new THREE.Vector3(0, 0, 8.5);   // distance set for real in resize()
+  camera.position.copy(camBase);
+  camera.lookAt(0, 0, 0);
+
+  // ── lights ──────────────────────────────────────────────────
+  scene.add(new THREE.AmbientLight(0xF0ECE4, 0.75));
+  const key = new THREE.DirectionalLight(0xFFF3D8, 1.1);
+  key.position.set(-3, 5, 6);
+  scene.add(key);
+  const fill = new THREE.DirectionalLight(0xE4EAFF, 0.35);
+  fill.position.set(4, 2, 4);
+  scene.add(fill);
+
+  // ── load GLB ────────────────────────────────────────────────
+  const loader = new GLTFLoader();
+  const gltf = await new Promise((resolve, reject) => {
+    loader.load('products/shelf.glb', resolve, undefined, reject);
+  });
+
+  const shelfRoot = new THREE.Group();
+  shelfRoot.add(gltf.scene);
+  scene.add(shelfRoot);
+
+  // Compute bounding box → center + scale the model into view
+  const box = new THREE.Box3().setFromObject(gltf.scene);
+  const size = new THREE.Vector3(); box.getSize(size);
+  const center = new THREE.Vector3(); box.getCenter(center);
+  gltf.scene.position.sub(center);   // center the model on origin
+  // Normalize height to 3.0 world units so camera framing is stable
+  const targetHeight = 3.0;
+  const scale = targetHeight / size.y;
+  gltf.scene.scale.setScalar(scale);
+
+  // Improve texture filtering
+  gltf.scene.traverse((obj) => {
+    if(obj.isMesh && obj.material && obj.material.map){
+      obj.material.map.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      obj.material.side = THREE.DoubleSide;
+    }
+  });
+
+  // ── responsive size ─────────────────────────────────────────
+  // Compute the exact camera distance needed to fit the model's bounding
+  // sphere in the current viewport. Adds 25% padding so the shelf breathes.
+  const boundingSphere = new THREE.Sphere();
+  new THREE.Box3().setFromObject(gltf.scene).getBoundingSphere(boundingSphere);
+  const R = boundingSphere.radius;
+  const PADDING = 0.85;   // crops shelf edges — shelf punches out of the box
+
+  function resize(){
+    const w = wrap.clientWidth;
+    const h = wrap.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    // Distance to fit the model's bounding sphere in the SMALLER of vertical
+    // vs horizontal FOV — whichever axis is more constraining.
+    const vFov = camera.fov * Math.PI / 180;
+    const hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect);
+    const distV = R / Math.sin(vFov / 2);
+    const distH = R / Math.sin(hFov / 2);
+    camBase.z = Math.max(distV, distH) * PADDING;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  window.addEventListener('resize', resize, { passive: true });
+
+  // ── mouse sway (tracks cursor over the shelf area) + scroll push ──
+  // Sway is driven by cursor position relative to the wrap so the shelf
+  // "follows" the pointer. Returns to center when the cursor leaves.
+  const mouse = { x:0, y:0, tx:0, ty:0 };
+  wrap.addEventListener('mousemove', (e) => {
+    const rect = wrap.getBoundingClientRect();
+    mouse.tx = ((e.clientX - rect.left) / rect.width)  * 2 - 1;
+    mouse.ty = ((e.clientY - rect.top)  / rect.height) * 2 - 1;
+  }, { passive: true });
+  wrap.addEventListener('mouseleave', () => {
+    // Ease back to neutral when the user leaves the shelf
+    mouse.tx = 0; mouse.ty = 0;
+  });
+
+  let scrollProgress = 0;
+  if(typeof ScrollTrigger !== 'undefined'){
+    const heroEl = document.querySelector('.hero');
+    ScrollTrigger.create({
+      trigger: heroEl,
+      start: 'top top',
+      end: 'bottom top',
+      scrub: 0.6,
+      onUpdate: (self) => { scrollProgress = self.progress; }
+    });
+  }
+
+  // ── animation loop ──────────────────────────────────────────
+  const clock = new THREE.Clock();
+  function tick(){
+    const dt = Math.min(clock.getDelta(), 0.05);
+    // Frame-rate-independent smoothing
+    const lerp = 1 - Math.exp(-4 * dt);
+    mouse.x += (mouse.tx - mouse.x) * lerp;
+    mouse.y += (mouse.ty - mouse.y) * lerp;
+
+    if(!REDUCED_MOTION){
+      // Sway toward the cursor — bigger yaw than pitch so it reads as "looking
+      // around" the shelf, not tilting a physical object.
+      shelfRoot.rotation.y = mouse.x * 0.22;   // ~12° left/right
+      shelfRoot.rotation.x = -mouse.y * 0.09;  // ~5° up/down
+      // Camera creeps in slightly on scroll (parallax push)
+      camera.position.z = camBase.z - scrollProgress * 0.8;
+      // Slight lift as user scrolls the hero
+      camera.position.y = -scrollProgress * 0.15;
+    }
+    camera.lookAt(0, 0, 0);
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(tick);
+  }
+  tick();
+
+  // ── reveal ──────────────────────────────────────────────────
+  // Two-frame wait so the first render lands before we fade in
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    canvas.classList.add('is-visible');
+    if(imgFall) imgFall.classList.add('is-hidden');
+  }));
+}
 </script>
 </body>
 </html>
