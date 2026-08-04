@@ -2,3 +2,4 @@
 .vercel
 node_modules
 .env*
+products/shelf.original.glb

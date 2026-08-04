@@ -528,9 +528,11 @@ p{text-wrap:pretty}
 
 @media (max-width: 960px){
   /* Mobile hero flow (top → bottom):
-       eyebrow → title → SHELF → sub → CTAs
-     `display:contents` on .hero-copy promotes its children up into the
-     flex parent so we can weave the canvas between them via `order`. */
+       eyebrow → title → SHELF → sub
+     CTAs are hidden on phones (per client) — the nav "Let's Talk" pill
+     still lands them in the contact form. `display:contents` on .hero-copy
+     promotes its children up into the flex parent so we can weave the
+     canvas between them via `order`. */
   .hero{min-height:auto; padding-top:120px}
   .hero-grid{
     display:flex; flex-direction:column;
@@ -541,7 +543,7 @@ p{text-wrap:pretty}
   .hero h1         { order:2 }
   .hero-canvas-wrap{ order:3; height:min(56vh, 520px); min-height:420px; width:100%; max-width:520px; margin:0 auto; align-self:center }
   .hero-sub        { order:4 }
-  .hero-ctas       { order:5 }
+  .hero-ctas       { display:none }
   .scroll-indicator{ display:none }
 }
 @media (max-width: 640px){
@@ -1979,9 +1981,12 @@ init3DShelf().catch(err => {
 });
 
 async function init3DShelf(){
-  const [THREE, { GLTFLoader }] = await Promise.all([
+  // shelf.glb is Draco-compressed (448 KB vs 4.9 MB uncompressed) so we
+  // need the DRACOLoader to decode geometry before GLTFLoader can use it.
+  const [THREE, { GLTFLoader }, { DRACOLoader }] = await Promise.all([
     import('three'),
     import('three/addons/loaders/GLTFLoader.js'),
+    import('three/addons/loaders/DRACOLoader.js'),
   ]);
 
   const canvas = document.querySelector('.shelf-canvas');
@@ -2018,10 +2023,14 @@ async function init3DShelf(){
   scene.add(fill);
 
   // ── load GLB ────────────────────────────────────────────────
+  const draco = new DRACOLoader();
+  draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.164.0/examples/jsm/libs/draco/');
   const loader = new GLTFLoader();
+  loader.setDRACOLoader(draco);
   const gltf = await new Promise((resolve, reject) => {
     loader.load('products/shelf.glb', resolve, undefined, reject);
   });
+  draco.dispose();
 
   const shelfRoot = new THREE.Group();
   shelfRoot.add(gltf.scene);
