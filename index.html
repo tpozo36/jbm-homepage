@@ -344,8 +344,24 @@ p{text-wrap:pretty}
   display:block;
   opacity:0;
   transition:opacity .5s var(--ease-out);
+  pointer-events:none;   /* SVG overlay handles input */
 }
 .shelf-canvas.is-visible{ opacity:1 }
+.shelf-hits{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  pointer-events:none;   /* svg container passes through; rects catch clicks */
+  overflow:visible;
+}
+.shelf-hits rect{
+  fill:transparent;
+  pointer-events:all;
+  cursor:pointer;
+}
+.shelf-hits rect:focus-visible{
+  outline:2px solid var(--paper);
+  outline-offset:-2px;
+}
 
 /* ============================================================
    PRODUCT LIGHTBOX — click a shelf product to see it up close
@@ -1334,6 +1350,11 @@ p{text-wrap:pretty}
     </div>
     <div class="hero-canvas-wrap">
       <canvas class="shelf-canvas" aria-hidden="true"></canvas>
+      <!-- Invisible click/hover regions layered on top. Tooltips only —
+           no visible highlight (per client). Positions are pinned to the
+           reference-image layout so may drift from the 3D shelf; that's a
+           known trade-off pending a properly-separated GLB. -->
+      <svg class="shelf-hits" viewBox="0 0 1744 2336" preserveAspectRatio="xMidYMid meet" aria-label="Products on the shelf"></svg>
     </div>
   </div>
   <div class="scroll-indicator" aria-hidden="true">
@@ -1848,6 +1869,102 @@ ScrollTrigger.create({
 });
 
 /* ============================================================
+   HERO SHELF INTERACTION — invisible SVG hit regions layered on
+   top of the 3D shelf. Hover shows tooltip; click opens lightbox.
+   No visible highlight per client request.
+   Region coords are pinned to the 2D reference-image layout, so
+   may not perfectly track the 3D geometry (known trade-off).
+   ============================================================ */
+(async function initShelfHero(){
+  const svg = document.querySelector('.shelf-hits');
+  if(!svg) return;
+
+  let catalog;
+  try {
+    const res = await fetch('products/shelf-catalog.json', { cache:'no-cache' });
+    catalog = await res.json();
+  } catch (err) {
+    console.error('shelf-catalog.json failed to load', err);
+    return;
+  }
+
+  const tooltip = document.getElementById('product-tooltip');
+  const tipName = tooltip.querySelector('.product-tip-name');
+  const tipDesc = tooltip.querySelector('.product-tip-desc');
+
+  const lightbox = document.getElementById('productLightbox');
+  const lbImg    = lightbox.querySelector('.lightbox-image');
+  const lbBrand  = lightbox.querySelector('#lb-brand');
+  const lbSku    = lightbox.querySelector('#lb-sku');
+  const lbDesc   = lightbox.querySelector('#lb-desc');
+  const lbClose  = lightbox.querySelector('.lightbox-close');
+  const lbScrim  = lightbox.querySelector('.lightbox-scrim');
+
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const STRIP  = /\s*\(Facing\s*\d+\)\s*/i;
+
+  catalog.products.forEach((p) => {
+    const rect = document.createElementNS(SVG_NS, 'rect');
+    const [x, y, w, h] = p.region;
+    rect.setAttribute('x', x);
+    rect.setAttribute('y', y);
+    rect.setAttribute('width',  w);
+    rect.setAttribute('height', h);
+    rect.setAttribute('tabindex', 0);
+    rect.setAttribute('role', 'button');
+    rect.setAttribute('aria-label', `${p.brand} — ${p.sku}. Press Enter to open.`);
+    rect.dataset.slug = p.slug;
+    svg.appendChild(rect);
+
+    rect.addEventListener('mouseenter', () => {
+      tipName.textContent = `${p.brand} — ${p.sku.replace(STRIP, '')}`;
+      tipDesc.textContent = p.desc;
+      tooltip.classList.add('is-visible');
+    });
+    rect.addEventListener('mousemove', (e) => {
+      tooltip.style.left = e.clientX + 'px';
+      tooltip.style.top  = e.clientY + 'px';
+    });
+    rect.addEventListener('mouseleave', () => {
+      tooltip.classList.remove('is-visible');
+    });
+
+    const open = () => openLightbox(p);
+    rect.addEventListener('click', open);
+    rect.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); }
+    });
+  });
+
+  let lastFocused = null;
+  function openLightbox(p){
+    lastFocused = document.activeElement;
+    lbBrand.textContent = p.brand;
+    lbSku.textContent   = p.sku.replace(STRIP, '');
+    lbDesc.textContent  = p.desc;
+    lbImg.src           = `products/shelf-regions/${p.slug}.png`;
+    lbImg.alt           = `${p.brand} — ${p.sku}`;
+    lightbox.classList.add('is-open');
+    lightbox.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => lbClose.focus());
+  }
+
+  function closeLightbox(){
+    lightbox.classList.remove('is-open');
+    lightbox.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    if(lastFocused && lastFocused.focus) lastFocused.focus();
+  }
+
+  lbClose.addEventListener('click', closeLightbox);
+  lbScrim.addEventListener('click', closeLightbox);
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape' && lightbox.classList.contains('is-open')) closeLightbox();
+  });
+})();
+
+/* ============================================================
    HERO ENTRANCE TIMELINE
    ============================================================ */
 const heroTL = gsap.timeline({ delay: reduceMotion ? 0 : 0.25 });
@@ -1986,9 +2103,11 @@ async function init3DShelf(){
   resize();
   window.addEventListener('resize', resize, { passive: true });
 
-  // ── mouse sway (tracks cursor over the shelf area) + scroll push ──
-  // Sway is driven by cursor position relative to the wrap so the shelf
-  // "follows" the pointer. Returns to center when the cursor leaves.
+  // ── input drivers ───────────────────────────────────────────
+  // Two independent signals feed the same target vector:
+  //   • desktop → cursor position over the shelf
+  //   • mobile  → phone tilt (device orientation)
+  // Whichever fires last wins; on mobile there's no mouse so no fight.
   const mouse = { x:0, y:0, tx:0, ty:0 };
   wrap.addEventListener('mousemove', (e) => {
     const rect = wrap.getBoundingClientRect();
@@ -1996,9 +2115,38 @@ async function init3DShelf(){
     mouse.ty = ((e.clientY - rect.top)  / rect.height) * 2 - 1;
   }, { passive: true });
   wrap.addEventListener('mouseleave', () => {
-    // Ease back to neutral when the user leaves the shelf
     mouse.tx = 0; mouse.ty = 0;
   });
+
+  // Device orientation → tilt shelf as user turns the phone.
+  // iOS 13+ gates this behind a permission prompt that must be triggered
+  // by a user gesture, so we request it on first tap and keep it silent
+  // on Android / older iOS where no permission is needed.
+  function attachOrientation(){
+    window.addEventListener('deviceorientation', (e) => {
+      if(e.gamma == null || e.beta == null) return;
+      // gamma: left/right tilt (-90 .. 90). Normalize to roughly -1..1
+      // beta:  front/back tilt. 45° = "phone held upright to face" baseline.
+      const tx = Math.max(-1, Math.min(1, e.gamma / 35));
+      const ty = Math.max(-1, Math.min(1, (e.beta - 45) / 45));
+      mouse.tx = tx;
+      mouse.ty = ty;
+    }, { passive: true });
+  }
+  if(typeof DeviceOrientationEvent !== 'undefined'){
+    if(typeof DeviceOrientationEvent.requestPermission === 'function'){
+      // iOS 13+ — needs a user gesture. Attach once, on first tap.
+      const requestOnTap = () => {
+        DeviceOrientationEvent.requestPermission()
+          .then((state) => { if(state === 'granted') attachOrientation(); })
+          .catch(() => {});
+      };
+      document.addEventListener('touchend', requestOnTap, { once:true, passive:true });
+    } else {
+      // Android / desktop / older iOS — just listen.
+      attachOrientation();
+    }
+  }
 
   let scrollProgress = 0;
   if(typeof ScrollTrigger !== 'undefined'){
