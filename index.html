@@ -2137,16 +2137,16 @@ async function init3DShelf(){
     mouse.x += (mouse.tx - mouse.x) * lerp;
     mouse.y += (mouse.ty - mouse.y) * lerp;
 
+    // Idle sway runs UNCONDITIONALLY — even under prefers-reduced-motion
+    // we want the shelf to look alive. Amplitude is small enough that it
+    // doesn't trigger vestibular issues. iOS Reduce Motion was silently
+    // freezing the shelf until a tap fired, which read as "broken."
+    const idleYaw   = Math.sin(t * 0.50) * 0.14;   // ~8° slow left/right
+    const idlePitch = Math.sin(t * 0.33) * 0.045;  // ~2.6° slow up/down
+    shelfRoot.rotation.y = idleYaw   + mouse.x * (REDUCED_MOTION ? 0 : 0.18);
+    shelfRoot.rotation.x = idlePitch - mouse.y * (REDUCED_MOTION ? 0 : 0.08);
+    // Camera parallax on scroll — respects reduced motion
     if(!REDUCED_MOTION){
-      // Idle sway is always running — the shelf breathes on its own so
-      // it looks alive from the moment it loads, without waiting for a
-      // cursor or device-orientation event. Cursor / tilt input adds on
-      // top of the idle motion.
-      const idleYaw   = Math.sin(t * 0.45) * 0.10;   // ~5.7° slow left/right
-      const idlePitch = Math.sin(t * 0.31) * 0.035;  // ~2° slow up/down
-      shelfRoot.rotation.y = idleYaw   + mouse.x * 0.18;
-      shelfRoot.rotation.x = idlePitch - mouse.y * 0.08;
-      // Camera creeps in slightly on scroll (parallax push)
       camera.position.z = camBase.z - scrollProgress * 0.8;
       camera.position.y = -scrollProgress * 0.15;
     }

@@ -1,306 +1,35 @@
 {
   "ref_width": 1744,
   "ref_height": 2336,
+  "_note": "Consolidated from 25 per-SKU regions into 4 shelf-level bands. The 3D GLB is a single fused mesh so per-product raycasting isn't possible, and the shelf sways constantly — small precise rects miss more than they hit. Each region below covers a whole shelf tier so hover tooltips land reliably even with drift.",
   "products": [
     {
-      "slug": "tipson-moringa-turmeric",
+      "slug": "shelf-tipson",
       "brand": "Tipson Tea",
-      "sku": "Moringa & Turmeric",
-      "desc": "Organic caffeine-free herbal infusion \u2014 moringa leaves + turmeric root.",
-      "region": [
-        345,
-        210,
-        215,
-        335
-      ]
+      "sku": "Herbal & Wellness Teas",
+      "desc": "Organic caffeine-free infusions. Moringa, chamomile, matcha, ginger, sleep-well blends.",
+      "region": [300, 180, 1140, 400]
     },
     {
-      "slug": "tipson-turmeric-chamomile",
-      "brand": "Tipson Tea",
-      "sku": "Turmeric & Chamomile",
-      "desc": "25 enveloped bags. Herbal turmeric + chamomile blend.",
-      "region": [
-        560,
-        210,
-        210,
-        335
-      ]
-    },
-    {
-      "slug": "tipson-matcha-passion",
-      "brand": "Tipson Tea",
-      "sku": "Matcha, Turmeric & Passionfruit",
-      "desc": "Vibrant matcha, turmeric, and passionfruit infusion.",
-      "region": [
-        765,
-        210,
-        210,
-        335
-      ]
-    },
-    {
-      "slug": "tipson-ginger-lemon-honey",
-      "brand": "Tipson Tea",
-      "sku": "Ginger, Lemon & Honey",
-      "desc": "Warming ginger infusion with lemon and honey notes.",
-      "region": [
-        975,
-        210,
-        205,
-        335
-      ]
-    },
-    {
-      "slug": "tipson-sleep-well",
-      "brand": "Tipson Tea",
-      "sku": "Sleep Well",
-      "desc": "Caffeine-free evening blend. 20 enveloped bags.",
-      "region": [
-        1180,
-        210,
-        205,
-        335
-      ]
-    },
-    {
-      "slug": "hellenic-oil-large-1",
+      "slug": "shelf-hellenic",
       "brand": "Hellenic Treasures",
-      "sku": "Extra Virgin Olive Oil \u2014 500ml (Facing 1)",
-      "desc": "Premium single-origin extra virgin olive oil.",
-      "region": [
-        340,
-        680,
-        115,
-        555
-      ]
+      "sku": "Extra Virgin Olive Oil & Olives",
+      "desc": "Single-origin Greek olive oil in 250ml and 500ml bottles, plus organic Kalamata and green olives.",
+      "region": [300, 640, 1140, 620]
     },
     {
-      "slug": "hellenic-oil-large-2",
-      "brand": "Hellenic Treasures",
-      "sku": "Extra Virgin Olive Oil \u2014 500ml (Facing 2)",
-      "desc": "Premium single-origin extra virgin olive oil.",
-      "region": [
-        450,
-        680,
-        115,
-        555
-      ]
-    },
-    {
-      "slug": "hellenic-oil-small-1",
-      "brand": "Hellenic Treasures",
-      "sku": "Extra Virgin Olive Oil \u2014 250ml (Facing 1)",
-      "desc": "Small-batch cold-pressed extra virgin olive oil.",
-      "region": [
-        590,
-        730,
-        100,
-        505
-      ]
-    },
-    {
-      "slug": "hellenic-oil-small-2",
-      "brand": "Hellenic Treasures",
-      "sku": "Extra Virgin Olive Oil \u2014 250ml (Facing 2)",
-      "desc": "Small-batch cold-pressed extra virgin olive oil.",
-      "region": [
-        685,
-        730,
-        95,
-        505
-      ]
-    },
-    {
-      "slug": "hellenic-oil-small-3",
-      "brand": "Hellenic Treasures",
-      "sku": "Extra Virgin Olive Oil \u2014 250ml (Facing 3)",
-      "desc": "Small-batch cold-pressed extra virgin olive oil.",
-      "region": [
-        775,
-        730,
-        100,
-        505
-      ]
-    },
-    {
-      "slug": "hellenic-oil-small-4",
-      "brand": "Hellenic Treasures",
-      "sku": "Extra Virgin Olive Oil \u2014 250ml (Facing 4)",
-      "desc": "Small-batch cold-pressed extra virgin olive oil.",
-      "region": [
-        870,
-        730,
-        100,
-        505
-      ]
-    },
-    {
-      "slug": "hellenic-olives-kalamata",
-      "brand": "Hellenic Treasures",
-      "sku": "Organic Kalamata Olives",
-      "desc": "Traditional brine-cured Greek olives.",
-      "region": [
-        1000,
-        850,
-        200,
-        385
-      ]
-    },
-    {
-      "slug": "hellenic-olives-green",
-      "brand": "Hellenic Treasures",
-      "sku": "Organic Green Olives",
-      "desc": "Whole green organic olives.",
-      "region": [
-        1200,
-        850,
-        200,
-        385
-      ]
-    },
-    {
-      "slug": "samai-root-crisps",
+      "slug": "shelf-samai",
       "brand": "SaMai",
-      "sku": "Rainforest Root Crisps \u2014 Sweet Chili",
-      "desc": "Ecuadorian root crisps with a sweet-chili finish.",
-      "region": [
-        345,
-        1345,
-        155,
-        345
-      ]
+      "sku": "Rainforest Plantain & Root Chips",
+      "desc": "Hand-cut chips from Ecuador — plantain, cassava, sweet potato. Sea salt, garlic, jungle chili, sweet chili.",
+      "region": [300, 1310, 1140, 400]
     },
     {
-      "slug": "samai-plantain-seasalt",
-      "brand": "SaMai",
-      "sku": "Plantain Chips \u2014 Pacific Sea Salt",
-      "desc": "Green plantain chips, hand-cut, Pacific sea salt.",
-      "region": [
-        500,
-        1345,
-        155,
-        345
-      ]
-    },
-    {
-      "slug": "samai-plantain-sweet",
-      "brand": "SaMai",
-      "sku": "Plantain Chips \u2014 Naturally Sweet",
-      "desc": "Ripe plantain chips, naturally sweet.",
-      "region": [
-        655,
-        1345,
-        150,
-        345
-      ]
-    },
-    {
-      "slug": "samai-plantain-garlic",
-      "brand": "SaMai",
-      "sku": "Plantain Chips \u2014 Garlic",
-      "desc": "Green plantain chips with roasted garlic.",
-      "region": [
-        805,
-        1345,
-        150,
-        345
-      ]
-    },
-    {
-      "slug": "samai-plantain-chili",
-      "brand": "SaMai",
-      "sku": "Plantain Chips \u2014 Jungle Chili",
-      "desc": "Green plantain chips, jungle chili heat.",
-      "region": [
-        955,
-        1345,
-        150,
-        345
-      ]
-    },
-    {
-      "slug": "samai-plantain-strips",
-      "brand": "SaMai",
-      "sku": "Artisan Plantain Strips \u2014 Sea Salt",
-      "desc": "Hand-cut plantain strips, artisan style, sea salt.",
-      "region": [
-        1105,
-        1345,
-        150,
-        345
-      ]
-    },
-    {
-      "slug": "samai-veggie-crisps",
-      "brand": "SaMai",
-      "sku": "Rainforest Veggie Crisps \u2014 Sea Salt",
-      "desc": "Cassava, plantain, and sweet potato crisps.",
-      "region": [
-        1255,
-        1345,
-        150,
-        345
-      ]
-    },
-    {
-      "slug": "forbes-peppermint-1",
+      "slug": "shelf-forbes",
       "brand": "Forbes Candies",
-      "sku": "Peppermint Taffy (Facing 1)",
-      "desc": "Peppermint \u00b7 Hot Cocoa \u00b7 Peppermint Bark \u00b7 Hot Cinnamon.",
-      "region": [
-        345,
-        1770,
-        210,
-        430
-      ]
-    },
-    {
-      "slug": "forbes-peppermint-2",
-      "brand": "Forbes Candies",
-      "sku": "Peppermint Taffy (Facing 2)",
-      "desc": "Peppermint \u00b7 Hot Cocoa \u00b7 Peppermint Bark \u00b7 Hot Cinnamon.",
-      "region": [
-        555,
-        1770,
-        210,
-        430
-      ]
-    },
-    {
-      "slug": "forbes-peppermint-3",
-      "brand": "Forbes Candies",
-      "sku": "Peppermint Taffy (Facing 3)",
-      "desc": "Peppermint \u00b7 Hot Cocoa \u00b7 Peppermint Bark \u00b7 Hot Cinnamon.",
-      "region": [
-        765,
-        1770,
-        200,
-        430
-      ]
-    },
-    {
-      "slug": "forbes-peppermint-4",
-      "brand": "Forbes Candies",
-      "sku": "Peppermint Taffy (Facing 4)",
-      "desc": "Peppermint \u00b7 Hot Cocoa \u00b7 Peppermint Bark \u00b7 Hot Cinnamon.",
-      "region": [
-        965,
-        1770,
-        210,
-        430
-      ]
-    },
-    {
-      "slug": "forbes-peppermint-5",
-      "brand": "Forbes Candies",
-      "sku": "Peppermint Taffy (Facing 5)",
-      "desc": "Peppermint \u00b7 Hot Cocoa \u00b7 Peppermint Bark \u00b7 Hot Cinnamon.",
-      "region": [
-        1175,
-        1770,
-        210,
-        430
-      ]
+      "sku": "Peppermint Taffy",
+      "desc": "Peppermint · Hot Cocoa · Peppermint Bark · Hot Cinnamon. Small-batch confections since 1930.",
+      "region": [300, 1740, 1140, 480]
     }
   ]
 }
