@@ -2087,7 +2087,7 @@ async function init3DShelf(){
   const boundingSphere = new THREE.Sphere();
   new THREE.Box3().setFromObject(gltf.scene).getBoundingSphere(boundingSphere);
   const R = boundingSphere.radius;
-  const PADDING = 1.02;   // tight framing — shelf almost fills the box
+  const PADDING = 0.85;   // crops shelf edges — shelf punches out of the box
 
   function resize(){
     const w = wrap.clientWidth;
