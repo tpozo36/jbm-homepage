@@ -10,13 +10,17 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,600;1,700&display=swap" rel="stylesheet">
 
-<!-- Preload the 4.7MB shelf GLB so it streams alongside the HTML fetch
-     instead of waiting for the module chain to boot. Do NOT modulepreload
-     three.js or GLTFLoader here — they contain bare "three" specifiers
-     that fail without the importmap, and the importmap must be applied
-     before any module load kicks off. Runtime import() below handles
-     the module fetch. -->
+<!-- Preload the shelf GLB (448 KB, Draco-compressed) so it streams
+     alongside the HTML fetch instead of waiting for the module chain
+     to boot. Also warm the Draco decoder WASM binary — GLTFLoader
+     fetches it after the GLB parses; kicking that off in parallel
+     shaves ~300ms off first paint on mobile.
+     Do NOT modulepreload three/GLTFLoader here — they contain bare
+     "three" specifiers that fail without the importmap. Runtime
+     import() below handles the module fetch. -->
 <link rel="preload" href="products/shelf.glb" as="fetch" type="model/gltf-binary" crossorigin>
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/three@0.164.0/examples/jsm/libs/draco/draco_wasm_wrapper.js" as="script" crossorigin>
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/three@0.164.0/examples/jsm/libs/draco/draco_decoder.wasm" as="fetch" type="application/wasm" crossorigin>
 
 <!-- importmap MUST appear before any module load starts (including any
      modulepreload). Keep it in <head> so nothing races against it. -->
@@ -377,17 +381,6 @@ p{text-wrap:pretty}
   pointer-events:none;   /* SVG overlay handles input */
 }
 .shelf-canvas.is-visible{ opacity:1 }
-.shelf-hits{
-  position:absolute; inset:0;
-  width:100%; height:100%;
-  pointer-events:none;   /* svg container passes through; rects catch clicks */
-  overflow:visible;
-}
-.shelf-hits rect{
-  fill:transparent;
-  pointer-events:all;
-  cursor:default;
-}
 
 /* ============================================================
    PRODUCT LIGHTBOX — click a shelf product to see it up close
@@ -1388,11 +1381,6 @@ p{text-wrap:pretty}
     </div>
     <div class="hero-canvas-wrap">
       <canvas class="shelf-canvas" aria-hidden="true"></canvas>
-      <!-- Invisible click/hover regions layered on top. Tooltips only —
-           no visible highlight (per client). Positions are pinned to the
-           reference-image layout so may drift from the 3D shelf; that's a
-           known trade-off pending a properly-separated GLB. -->
-      <svg class="shelf-hits" viewBox="0 0 1744 2336" preserveAspectRatio="xMidYMid meet" aria-label="Products on the shelf"></svg>
     </div>
   </div>
   <div class="scroll-indicator" aria-hidden="true">
@@ -1692,12 +1680,6 @@ p{text-wrap:pretty}
   </div>
 </footer>
 
-<!-- Tooltip for hovered shelf products (must exist before scripts run) -->
-<div id="product-tooltip" class="product-tip" role="status" aria-live="polite" aria-hidden="true">
-  <span class="product-tip-name"></span>
-  <span class="product-tip-desc"></span>
-</div>
-
 
 <!-- =========================================================
      LIBS
@@ -1879,59 +1861,6 @@ ScrollTrigger.create({
     });
   }
 });
-
-/* ============================================================
-   HERO SHELF HOVER — invisible SVG hit regions over the 3D shelf.
-   Hover a region → tooltip appears with brand/SKU. Nothing more:
-   the click-to-lightbox path was removed because the cropped
-   reference photos read as low-fidelity next to the 3D scene.
-   Region coords are pinned to the 2D reference-image layout, so
-   may not perfectly track the 3D geometry (known trade-off).
-   ============================================================ */
-(async function initShelfHero(){
-  const svg = document.querySelector('.shelf-hits');
-  if(!svg) return;
-
-  let catalog;
-  try {
-    const res = await fetch('products/shelf-catalog.json', { cache:'no-cache' });
-    catalog = await res.json();
-  } catch (err) {
-    console.error('shelf-catalog.json failed to load', err);
-    return;
-  }
-
-  const tooltip = document.getElementById('product-tooltip');
-  const tipName = tooltip.querySelector('.product-tip-name');
-  const tipDesc = tooltip.querySelector('.product-tip-desc');
-
-  const SVG_NS = 'http://www.w3.org/2000/svg';
-  const STRIP  = /\s*\(Facing\s*\d+\)\s*/i;
-
-  catalog.products.forEach((p) => {
-    const rect = document.createElementNS(SVG_NS, 'rect');
-    const [x, y, w, h] = p.region;
-    rect.setAttribute('x', x);
-    rect.setAttribute('y', y);
-    rect.setAttribute('width',  w);
-    rect.setAttribute('height', h);
-    rect.dataset.slug = p.slug;
-    svg.appendChild(rect);
-
-    rect.addEventListener('mouseenter', () => {
-      tipName.textContent = `${p.brand} — ${p.sku.replace(STRIP, '')}`;
-      tipDesc.textContent = p.desc;
-      tooltip.classList.add('is-visible');
-    });
-    rect.addEventListener('mousemove', (e) => {
-      tooltip.style.left = e.clientX + 'px';
-      tooltip.style.top  = e.clientY + 'px';
-    });
-    rect.addEventListener('mouseleave', () => {
-      tooltip.classList.remove('is-visible');
-    });
-  });
-})();
 
 /* ============================================================
    HERO ENTRANCE TIMELINE
@@ -2147,11 +2076,11 @@ async function init3DShelf(){
     mouse.y += (mouse.ty - mouse.y) * lerp;
 
     // Idle sway runs UNCONDITIONALLY — even under prefers-reduced-motion
-    // we want the shelf to look alive. Amplitude is small enough that it
-    // doesn't trigger vestibular issues. iOS Reduce Motion was silently
-    // freezing the shelf until a tap fired, which read as "broken."
-    const idleYaw   = Math.sin(t * 0.50) * 0.14;   // ~8° slow left/right
-    const idlePitch = Math.sin(t * 0.33) * 0.045;  // ~2.6° slow up/down
+    // we want the shelf to look alive. Phase is offset so the FIRST
+    // paint already shows the shelf mid-motion (~5°) instead of dead
+    // flat at t=0, which read as "not moving" until you looked away.
+    const idleYaw   = Math.sin(t * 0.55 + Math.PI / 4) * 0.16;  // ~9° slow left/right
+    const idlePitch = Math.sin(t * 0.34 + Math.PI / 3) * 0.05;  // ~3° slow up/down
     shelfRoot.rotation.y = idleYaw   + mouse.x * (REDUCED_MOTION ? 0 : 0.18);
     shelfRoot.rotation.x = idlePitch - mouse.y * (REDUCED_MOTION ? 0 : 0.08);
     // Camera parallax on scroll — respects reduced motion
